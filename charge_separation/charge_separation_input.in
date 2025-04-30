@@ -1,0 +1,26 @@
+# Number of computer processes available for parallelisation
+number_of_processes: 7
+
+# System parameters
+dimension: 1
+N: 100
+acceptor_electron_disorder: 150
+donor_hole_disorder: 150
+donor_HOMO_acceptor_LUMO_gap: 1600
+acceptor_electron_coupling: 75
+donor_hole_coupling: 75
+epsilon_r: 3.5
+site_spacing: 1e-9 
+CT_lifetime: 1e-10
+electron_bath_reorganisation_energy: 100
+hole_bath_reorganisation_energy: 100
+electron_bath_cutoff_energy: 62
+hole_bath_cutoff_energy: 62 
+T: 300 
+
+# Simulation parameters
+landscape_iterations: 1000
+trajectory_iterations: 10
+accuracy: 0.99
+separation_cutoff: 5e-9
+maximum_hops_cutoff: 10000

@@ -1,0 +1,94 @@
+────────────────────────────────────────────────────────────────────────────────
+dKMC.jl v1.0
+Charge Separation Module
+Github: https://github.com/kassalgroup/dKMC.jl
+
+Daniel Balzer
+University of Sydney
+Kassal Group: https://www.kassal.group
+
+This dKMC module simulates the separation of a partially delocalised 
+electron-hole pair from an interfacial charge-transfer (CT) state to free 
+charges. The simulations start from an interfacial CT state, i.e., an electron 
+and a hole on neighbouring molecules on the opposite sides of an interface 
+between the electron-donor and electron-acceptor materials. The simulation then 
+uses dKMC to propagate the separation dynamics, with the electron constrained 
+to the acceptor and the hole to the donor, until the charges either recombine 
+or separate.
+
+If this module is used, please cite the following:
+
+1. Balzer, D.; Kassal, I. Even a Little Delocalisation Produces Large Kinetic 
+Enhancements of Charge-Separation Efficiency in Organic Photovoltaics. Science 
+Advances 2022, 8, eabl9692.
+
+────────────────────────────────────────────────────────────────────────────────
+
+Julia version:  1.11.4
+Start time:     2025-04-28T14:01:15.669
+
+────────────────────────────────────────────────────────────────────────────────
+User input:
+────────────────────────────────────────────────────────────────────────────────
+# Number of computer processes available for parallelisation
+number_of_processes: 7
+
+# System parameters
+dimension: 1
+N: 100
+acceptor_electron_disorder: 150
+donor_hole_disorder: 150
+donor_HOMO_acceptor_LUMO_gap: 1600
+acceptor_electron_coupling: 75
+donor_hole_coupling: 75
+epsilon_r: 3.5
+site_spacing: 1e-9 
+CT_lifetime: 1e-10
+electron_bath_reorganisation_energy: 100
+hole_bath_reorganisation_energy: 100
+electron_bath_cutoff_energy: 62
+hole_bath_cutoff_energy: 62 
+T: 300 
+
+# Simulation parameters
+landscape_iterations: 1000
+trajectory_iterations: 10
+accuracy: 0.99
+separation_cutoff: 5e-9
+maximum_hops_cutoff: 10000
+
+────────────────────────────────────────────────────────────────────────────────
+Results:
+────────────────────────────────────────────────────────────────────────────────
+All uncertanties included below are standard errors of the mean.
+
+Internal quantum efficiency: 0.5492000000000001 ± 0.01403910454610474
+
+Proportion of all possible outcomes:
+    1. Separation: 0.5492000000000001 ± 0.01403910454610474
+    2. Recombination: 0.4244999999999998 ± 0.013873796604831446
+    3. Exceeded maximum hops cutoff: 0.02630000000000001 ± 0.0038721187098671615
+    4. Reached the edge of the system: 0.0 ± 0.0
+
+Mean characteristics of the initial state:
+    Energy (meV): 984.2844759384592 ± 6.782454322991269
+    Inverse participation ratio: 1.3424747594178879 ± 0.014728902445115448
+    Electron-hole separation (nm): 1.1755029389411846 ± 0.007550542662477366
+
+For trajectories where charges separate:
+    Mean separation time (s): 2.5467584361918657e-10 ± 6.672454467968623e-11
+    Mean characteristics of the initial state:
+        Energy (meV): 1069.612223567335 ± 6.655926225172842
+        Inverse participation ratio: 1.4299583492839913 ± 0.01885018105736372
+        Electron-hole separation: 1.2221720924738435 ± 0.00970176969923288
+    Mean characteristics of the final state:
+        Energy (meV): 1051.6251327467446 ± 5.453633898144481
+        Inverse participation ratio: 1.783009153768048 ± 0.026333913491423007
+        Electron-hole separation (nm): 5.831735369019423 ± 0.020046596651631103
+
+────────────────────────────────────────────────────────────────────────────────
+
+Evaluation completed successfully.
+End time:       2025-04-28T14:10:47.545
+
+────────────────────────────────────────────────────────────────────────────────

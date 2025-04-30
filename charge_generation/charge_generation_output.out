@@ -1,0 +1,142 @@
+────────────────────────────────────────────────────────────────────────────────
+dKMC.jl v1.0
+Charge Generation Module
+Github: https://github.com/kassalgroup/dKMC.jl
+
+Daniel Balzer
+University of Sydney
+Kassal Group: https://www.kassal.group
+
+This dKMC module simulates the complete process of the generation of partially 
+delocalised free charges from excitons. The simulations start from an exciton 
+in the donor material and near the interface with the acceptor material. The 
+simulation uses dKMC to propagate the full two-paricle dynamics, where the 
+electron and hole can occupy any donor or acceptor site, until the charges 
+either recombine or become separated.
+
+If this module is used, please cite the following:
+
+1. Balzer, D.; Kassal, I. Delocalisation enables efficient charge generation in 
+organic photovoltaics, even with little to no energetic offset. Chemical Science 
+2024, 15, 4779.
+
+────────────────────────────────────────────────────────────────────────────────
+
+Julia version:  1.11.4
+Start time:     2025-04-28T14:11:15.154
+
+────────────────────────────────────────────────────────────────────────────────
+User input:
+────────────────────────────────────────────────────────────────────────────────
+# Number of computer processes available for parallelisation
+number_of_processes: 7
+
+# System parameters
+dimension: 1
+N: 100
+donor_electron_disorder: 150
+acceptor_electron_disorder: 150
+donor_hole_disorder: 150
+acceptor_hole_disorder: 150
+donor_exciton_disorder: 30
+acceptor_exciton_disorder: 30
+donor_HOMO_LUMO_gap: 1600
+LUMO_offset: 500
+HOMO_offset: 500
+donor_exciton_binding_energy: 700
+acceptor_exciton_binding_energy: 700
+donor_electron_coupling: 75
+interface_electron_coupling: 75
+acceptor_electron_coupling: 75
+donor_hole_coupling: 75
+interface_hole_coupling: 75
+acceptor_hole_coupling: 75
+donor_transition_dipole_moment: 10
+acceptor_transition_dipole_moment: 10
+epsilon_r: 3.5
+site_spacing: 1e-9 
+donor_exciton_lifetime: 1e-11
+acceptor_exciton_lifetime: 1e-11
+donor_CT_lifetime: 1e-10
+interfacial_CT_lifetime: 1e-10
+acceptor_CT_lifetime: 1e-10
+electron_bath_reorganisation_energy: 100
+hole_bath_reorganisation_energy: 100
+exciton_bath_reorganisation_energy: 150
+electron_bath_cutoff_energy: 62
+hole_bath_cutoff_energy: 62
+exciton_bath_cutoff_energy: 62
+T: 300
+
+# Simulation parameters
+landscape_iterations: 1000
+trajectory_iterations: 10
+accuracy: 0.99
+maximum_hops_cutoff: 10000
+separation_cutoff: 5e-9 
+exciton_population_cutoff: 0.1
+maximum_excitation_distance: 5e-9
+
+────────────────────────────────────────────────────────────────────────────────
+Results:
+────────────────────────────────────────────────────────────────────────────────
+All uncertanties included below are standard errors of the mean.
+
+Internal quantum efficiency (IQE): 0.2931999999999995 ± 0.009541563888663196
+
+Proportion of all possible outcomes:
+    1. Separation: 0.2931999999999995 ± 0.009541563888663196
+        a. Interfacial separation: 0.2447999999999994 ± 0.008701072845843127
+        b. Bulk separation: 0.0484000000000001 ± 0.003915708463710357
+    2. Recombination: 0.6932 ± 0.01058202434505042
+        a. Exciton recombination: 0.4368000000000005 ± 0.007608130101650715
+        b. CT recombination: 0.2563999999999995 ± 0.007354970808616173
+            i. Interfacial CT recombination: 0.05810000000000014 ± 0.002391407290452387
+            ii. Bulk CT recombination: 0.19829999999999937 ± 0.006016918921949464
+    3. Exceeded maximum hops cutoff: 0.013299999999999994 ± 0.002391407290452387
+    4. Reached the edge of the system: 0.00030000000000000003 ± 0.000173031615434695
+
+Mean characteristics of the initial state:
+    Energy (meV): 742.2415171010741 ± 0.5566273260933327
+    Inverse participation ratio: 2.103902158088243 ± 0.017243456313159076
+    Electron-hole separation (nm): 0.112439670477306 ± 0.00272700013791451
+
+For all trajectories where charges separate:
+    Mean separation time (s): 9.460360557322057e-11 ± 2.605117499839584e-11
+    Mean characteristics of the initial state:
+        Energy (meV): 743.9534537913669 ± 0.9556279843448874
+        Inverse participation ratio: 2.101992345384168 ± 0.02578129632175673
+        Electron-hole separation (nm): 0.11453629921038744 ± 0.004477311343490299
+    Mean characteristics of the final state:
+        Energy (meV): 690.8926989906671 ± 8.063138822319823
+        Inverse participation ratio: 1.88436456657742 ± 0.029431152440582503
+        Electron-hole separation (nm): 5.866453046025305 ± 0.01995439918995221
+
+For trajectories undergoing interfacial separation:
+    Mean interfacial separation time (s): 1.0913082352177953e-10 ± 2.9974330491583557e-11
+    Mean characteristics of the initial state:
+        Energy (meV): 744.4668459105719 ± 1.0420529310658275
+        Inverse participation ratio: 2.0894069157835267 ± 0.027891491155547884
+        Electron-hole separation (nm): 0.11469870319056642 ± 0.00484523602079337
+    Mean characteristics of the final state:
+        Energy (meV): 608.9623627215764 ± 6.3318161663984736
+        Inverse participation ratio: 1.8942638323596728 ± 0.033361839144891874
+        Electron-hole separation (nm): 5.8922072881802805 ± 0.022365343594957867
+
+For trajectories undergoing bulk separation:
+    Mean bulk separation time (s): 2.977445211399663e-11 ± 4.037946302203242e-12
+    Mean characteristics of the initial state:
+        Energy (meV): 740.5932506065546 ± 2.024439154710006
+        Inverse participation ratio: 2.129299567150934 ± 0.05515087004469427
+        Electron-hole separation (nm): 0.10826288005212223 ± 0.010225663357776128
+    Mean characteristics of the final state:
+        Energy (meV): 1031.4778120054414 ± 10.437410767641657
+        Inverse participation ratio: 1.8066036323679286 ± 0.0456453611263295
+        Electron-hole separation (nm): 5.787567302213198 ± 0.03630962645299075
+
+────────────────────────────────────────────────────────────────────────────────
+
+Evaluation completed successfully.
+End time:       2025-04-28T14:40:38.623
+
+────────────────────────────────────────────────────────────────────────────────

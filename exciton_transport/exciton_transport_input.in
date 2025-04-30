@@ -1,0 +1,20 @@
+# Number of computer processes available for parallelisation
+number_of_processes: 7
+
+# System parameters
+dimension: 1
+N: 1000
+exciton_disorder: 30
+transition_dipole_moment: 10
+epsilon_r: 3.5 
+exciton_bath_reorganisation_energy: 150
+exciton_bath_cutoff_energy: 62
+T: 300
+site_spacing: 1e-9
+
+# Simulation parameters
+landscape_iterations: 1000
+trajectory_iterations: 100
+accuracy: 0.99
+end_time: 1e-10 
+number_of_sampling_times: 100

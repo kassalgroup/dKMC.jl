@@ -1,0 +1,48 @@
+# Number of computer processes available for parallelisation
+number_of_processes: 7
+
+# System parameters
+dimension: 1
+N: 100
+donor_electron_disorder: 150
+acceptor_electron_disorder: 150
+donor_hole_disorder: 150
+acceptor_hole_disorder: 150
+donor_exciton_disorder: 30
+acceptor_exciton_disorder: 30
+donor_HOMO_LUMO_gap: 1600
+LUMO_offset: 500
+HOMO_offset: 500
+donor_exciton_binding_energy: 700
+acceptor_exciton_binding_energy: 700
+donor_electron_coupling: 75
+interface_electron_coupling: 75
+acceptor_electron_coupling: 75
+donor_hole_coupling: 75
+interface_hole_coupling: 75
+acceptor_hole_coupling: 75
+donor_transition_dipole_moment: 10
+acceptor_transition_dipole_moment: 10
+epsilon_r: 3.5
+site_spacing: 1e-9 
+donor_exciton_lifetime: 1e-11
+acceptor_exciton_lifetime: 1e-11
+donor_CT_lifetime: 1e-10
+interfacial_CT_lifetime: 1e-10
+acceptor_CT_lifetime: 1e-10
+electron_bath_reorganisation_energy: 100
+hole_bath_reorganisation_energy: 100
+exciton_bath_reorganisation_energy: 150
+electron_bath_cutoff_energy: 62
+hole_bath_cutoff_energy: 62
+exciton_bath_cutoff_energy: 62
+T: 300
+
+# Simulation parameters
+landscape_iterations: 1000
+trajectory_iterations: 10
+accuracy: 0.99
+maximum_hops_cutoff: 10000
+separation_cutoff: 5e-9 
+exciton_population_cutoff: 0.1
+maximum_excitation_distance: 5e-9
