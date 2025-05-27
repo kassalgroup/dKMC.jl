@@ -8,19 +8,19 @@ For details, see:
 The input parameters are to be supplied in YAML format; for an example, see `exciton_transport_input.in`.
 
 Parameters required in the input file:
-- `number_of_processes`- The number of computer processes available for parallelisation.
-- `dimension`- Dimension of the system (1, 2, or 3).
+- `number_of_processes`: The number of computer processes available for parallelisation.
+- `dimension`: Dimension of the system (1, 2, or 3).
 - `N`: Length of system, i.e., number of sites in each direction.
-- `exciton_disorder`- Excitonic disorder (in meV).
-- `transition_dipole_moment`- Magnitude of the transition dipole moment on every site (in D).
-- `exciton_bath_reorganisation_energy`- Reorganisation energy of the exciton's bath (in meV). This is used in the bath spectral density, which is assumed to be super-Ohmic.
-- `exciton_bath_cutoff_energy`- Cutoff energy of the exciton's bath (in meV). This is used in the bath spectral density, which is assumed to be super-Ohmic.
-- `T`- Temperature (in K).
-- `site_spacing`- The distance between sites of the cubic lattice (in m).
+- `exciton_disorder`: Excitonic disorder (in meV).
+- `transition_dipole_moment`: Magnitude of the transition dipole moment on every site (in D).
+- `exciton_bath_reorganisation_energy`: Reorganisation energy of the exciton's bath (in meV). This is used in the bath spectral density, which is assumed to be super-Ohmic.
+- `exciton_bath_cutoff_energy`: Cutoff energy of the exciton's bath (in meV). This is used in the bath spectral density, which is assumed to be super-Ohmic.
+- `T`: Temperature (in K).
+- `site_spacing`: The distance between sites of the cubic lattice (in m).
 - `landscape_iterations`: Number of realisations of disorder (or energetic landscapes) for simulations to be run on.
 - `trajectory_iterations`: Number of trajectories to be simulated on each realisation of disorder.
-- `accuracy`- The accuracy of dKMC calculations (a_dKMC). A number between 0 and 1, typically chosen to be 0.99. Increasing the accuracy will reduce the error introduced by dKMC's approximations but will increase the computational cost.
-- `end_time`- The simulation end time (in s).
+- `accuracy`: The accuracy of dKMC calculations (a_dKMC). A number between 0 and 1, typically chosen to be 0.99. Increasing the accuracy will reduce the error introduced by dKMC's approximations but will increase the computational cost.
+- `end_time`: The simulation end time (in s).
 - `number_of_sampling_times`: The number of times between 0 and end_time to sample the squared displacement, energies and IPRs.
 
 ## How to use:
