@@ -204,10 +204,9 @@ function charge_approximating_radii(dimension::Integer,N::Integer,disorder::Numb
 
             #Calculating hopping rates to all states in accessible_states.
             hopping_rates = zeros(length(accessible_states))
-            accessible_sites = findall(x->x <= hamiltonian_radius^2, sum([(r[:,i] .-  current_location[i]).^2 for i in 1:dimension]))
-            current_state_relevant_sites = intersect(accessible_sites,sortperm(abs.(evecs[:,current_state]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,current_state])./sum(abs.(evecs[:,current_state])),rev=true)))])
+            current_state_relevant_sites = sortperm(abs.(evecs[:,current_state]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,current_state])./sum(abs.(evecs[:,current_state])),rev=true)))]
             for f = eachindex(accessible_states)
-                destination_state_relevant_sites = intersect(accessible_sites,sortperm(abs.(evecs[:,accessible_states[f]]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,accessible_states[f]])./sum(abs.(evecs[:,accessible_states[f]])),rev=true)))])
+                destination_state_relevant_sites = sortperm(abs.(evecs[:,accessible_states[f]]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,accessible_states[f]])./sum(abs.(evecs[:,accessible_states[f]])),rev=true)))]
                 hopping_rate = dKMC_hopping_rates.charge_transport_dKMC_rate(current_state,accessible_states[f],transformed_coupling,evals,evecs,K_tot,E_step,E_limit,current_state_relevant_sites,destination_state_relevant_sites)
                 if hopping_rate > 0
                     hopping_rates[f] = hopping_rate
@@ -446,10 +445,9 @@ function exciton_approximating_radii(dimension::Integer,N::Integer,exciton_disor
 
             #Calculating hopping rates to all states in accessible_states.
             hopping_rates = zeros(length(accessible_states))
-            accessible_sites = findall(x->x <= exciton_hamiltonian_radius^2, sum([(r[:,i] .-  current_location[i]).^2 for i in 1:dimension]))
-            current_state_relevant_sites = intersect(accessible_sites,sortperm(abs.(evecs[:,current_state]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,current_state])./sum(abs.(evecs[:,current_state])),rev=true)))])
+            current_state_relevant_sites = sortperm(abs.(evecs[:,current_state]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,current_state])./sum(abs.(evecs[:,current_state])),rev=true)))]
             for f = eachindex(accessible_states)
-                destination_state_relevant_sites = intersect(accessible_sites,sortperm(abs.(evecs[:,accessible_states[f]]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,accessible_states[f]])./sum(abs.(evecs[:,accessible_states[f]])),rev=true)))])
+                destination_state_relevant_sites = sortperm(abs.(evecs[:,accessible_states[f]]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,accessible_states[f]])./sum(abs.(evecs[:,accessible_states[f]])),rev=true)))]
                 hopping_rate = dKMC_hopping_rates.exciton_transport_dKMC_rate(current_state,accessible_states[f],transformed_coupling,evals,evecs,K_tot,E_step,E_limit,current_state_relevant_sites,destination_state_relevant_sites)
                 if hopping_rate > 0
                     hopping_rates[f] = hopping_rate
