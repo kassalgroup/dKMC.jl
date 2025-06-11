@@ -39,7 +39,7 @@ for future use.
 function collect_charge_approximating_radii(dimension::Integer,N::Integer,disorder::Number,electronic_coupling::Number,bath_reorganisation_energy::Number,bath_cutoff_energy::Number,T::Number,kappa::AbstractFloat,accuracy::AbstractFloat,landscape_iterations::Integer,K_tot::Matrix{ComplexF64},E_step::Number,E_limit::Number)
     
     #Create path for data to be stored.
-    DATA_PATH = string(dirname(dirname(@__DIR__)),"/raw_data")
+    DATA_PATH = string(dirname(dirname(dirname(@__DIR__))),"/raw_data")
     if !isdir(DATA_PATH)
         mkdir(DATA_PATH)
     end    
@@ -279,7 +279,7 @@ saved for future use.
 function collect_exciton_approximating_radii(dimension::Integer,N::Integer,exciton_disorder::Number,transition_dipole_moment::Number,epsilon_r::Number,exciton_bath_reorganisation_energy::Number,exciton_bath_cutoff_energy::Number,T::Number,kappa::AbstractFloat,site_spacing::Number,accuracy::AbstractFloat,landscape_iterations::Integer,K_tot::Matrix{ComplexF64},E_step::Number,E_limit::Number)
     
     #Create path for data to be stored.
-    DATA_PATH = string(dirname(dirname(@__DIR__)),"/raw_data")
+    DATA_PATH = string(dirname(dirname(dirname(@__DIR__))),"/raw_data")
     if !isdir(DATA_PATH)
         mkdir(DATA_PATH)
     end    

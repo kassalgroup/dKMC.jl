@@ -60,7 +60,7 @@ energies and values of the lambda function, before saving the full K_results in 
 function collect_K_results(J::Function,E_step::Number,E_limit::Number,phi_step::Number,phi_limit::Number,bath_reorganisation_energy,bath_cutoff_energy,T::Number)
 
     #Create path for K data to be stored.
-    DATA_K_PATH = string(dirname(dirname(@__DIR__)),"/raw_data","/K_data")
+    DATA_K_PATH = string(dirname(dirname(dirname(@__DIR__))),"/raw_data","/K_data")
     if !isdir(dirname(DATA_K_PATH))
         mkdir(dirname(DATA_K_PATH))
     end
@@ -161,7 +161,7 @@ running calculate_phi() for each of the required times, before saving the full p
 function collect_phi_results(J::Function,phi_step::Number,phi_limit::Number,bath_reorganisation_energy,bath_cutoff_energy,T::Number)
 
     #Create path for phi data to be stored.
-    DATA_PHI_PATH = string(dirname(dirname(@__DIR__)),"/raw_data","/phi_data")
+    DATA_PHI_PATH = string(dirname(dirname(dirname(@__DIR__))),"/raw_data","/phi_data")
     if !isdir(DATA_PHI_PATH)
         mkdir(DATA_PHI_PATH)
     end
