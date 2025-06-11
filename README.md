@@ -25,5 +25,8 @@ In summary:
 Before running any simulations:
 1. Install Julia from "https://julialang.org/downloads/".
 2. Install a Julia editor, such as Visual Studio Code from "https://code.visualstudio.com/download". 
-3. Install the dKMC package in Julia using '] add https://github.com/kassalgroup/dKMC.jl'.
+3. Install the dKMC package in Julia using 
+```julia
+] add https://github.com/kassalgroup/dKMC.jl'
+```
 4. For specific instructions on how to run each module, read the corresponding *README.md* file in each module.
