@@ -13,7 +13,7 @@ dKMC treats, in three dimensions, all the processes crucial in organic semicondu
 - [Balzer, D.; Kassal, I. Delocalisation enables efficient charge generation in organic photovoltaics, even with little to no energetic offset. *Chemical Science* **2024**, *15*, 4779.](https://pubs.rsc.org/en/content/articlelanding/2024/sc/d3sc05409h)
 
 ## Modules:
-This package contains five folders, one containing shared functions and one for the simulation of each of four fundamental transport processes: charge transport, exciton transport, charge separation, and charge generation. The charge- and exciton-transport modules can be used to simulate transport in any organic semiconductor (or other intermediate-regime material), while the charge-separation and -generation modules are specific to organic photovoltaics because they require an interface between donor and acceptor materials.
+This package contains five folders, all found within the src folder, one containing shared functions and one for the simulation of each of four fundamental transport processes: charge transport, exciton transport, charge separation, and charge generation. The charge- and exciton-transport modules can be used to simulate transport in any organic semiconductor (or other intermediate-regime material), while the charge-separation and -generation modules are specific to organic photovoltaics because they require an interface between donor and acceptor materials.
 
 In summary:
 1. The **charge transport** module calculates charge carrier mobilities.
@@ -25,4 +25,8 @@ In summary:
 Before running any simulations:
 1. Install Julia from "https://julialang.org/downloads/".
 2. Install a Julia editor, such as Visual Studio Code from "https://code.visualstudio.com/download". 
-3. For specific instructions on how to run each module, read the corresponding *README.md* file in each module.
+3. Install the dKMC package in Julia using 
+```julia
+] add https://github.com/kassalgroup/dKMC.jl'
+```
+4. For specific instructions on how to run each module, read the corresponding *README.md* file in each module.

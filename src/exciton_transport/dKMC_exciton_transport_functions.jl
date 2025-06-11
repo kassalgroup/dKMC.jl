@@ -218,7 +218,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
     current_location = ones(dimension).* (N/2)
 
     #Calculating the original system Hamiltonian, the polaron-trandformed system Hamiltonian, postion vectors, and coupling vector.
-    H,Ht,r,transformed_coupling = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
+    H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
 
     #Calculating eigenvectors and eigenvalues in the energy eigenbasis.
     evals,evecs = eigen(Ht)
@@ -250,10 +250,12 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
         end
 
         #Rediagonalise a new subset of the Hamiltonian.
-        H,Ht,r,transformed_coupling = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
+        previous_eigenstate = evecs[:,current_state]
+        previous_site_indexes = copy(site_indexes)
+        H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
         evals,evecs = eigen(Ht)
         centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        current_state = argmin(sum([(centres[i] .- current_location[i]).^2 for i in 1:dimension]))
+        current_state = argmax(((previous_eigenstate[findall(x->x in site_indexes,previous_site_indexes)]' * evecs[findall(x->x in previous_site_indexes,site_indexes),:])[:]).^2)
         current_location = [centres[i][current_state] for i in 1:dimension]
 
         #Finding which states are accessible from the current state.

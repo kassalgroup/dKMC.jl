@@ -270,7 +270,7 @@ function dKMC_charge_separation(dimension::Integer,N::Integer,energies::Vector{<
     current_electron_location[1] += 1
 
     #Calculating the current Hamiltonian, the polaron transformed Hamiltonian, the reference matrices.
-    H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index = setup_hamiltonian.current_charge_separation_hamiltonian(dimension,N,energies,electronic_couplings,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location)
+    H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index,site_pair_indexes = setup_hamiltonian.current_charge_separation_hamiltonian(dimension,N,energies,electronic_couplings,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location)
 
     #Finding the indexs corresponding to interfacial CT site-pairs.
     interfacial_sites = findall(x->x==1,sum([(electron_r[:,i] .- hole_r[:,i]).^2 for i in 1:dimension]))
@@ -311,12 +311,14 @@ function dKMC_charge_separation(dimension::Integer,N::Integer,energies::Vector{<
         end
 
         #Rediagonalise a new subset of the Hamiltonian.
-        H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index = setup_hamiltonian.current_charge_separation_hamiltonian(dimension,N,energies,electronic_couplings,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location)
+        previous_eigenstate = evecs[:,current_state]
+        previous_site_pair_indexes = copy(site_pair_indexes)
+        H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index,site_pair_indexes = setup_hamiltonian.current_charge_separation_hamiltonian(dimension,N,energies,electronic_couplings,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location)
         interfacial_sites = findall(x->x==1,sum([(electron_r[:,i] .- hole_r[:,i]).^2 for i in 1:dimension]))
         evals,evecs = eigen(Ht)
         electron_centres = [[evecs[:,i]' * Diagonal(electron_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
         hole_centres = [[evecs[:,i]' * Diagonal(hole_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        current_state = argmin(sqrt.(sum([(electron_centres[i] .- current_electron_location[i]).^2 for i in 1:dimension])) .+ sqrt.(sum([(hole_centres[i] .- current_hole_location[i]).^2 for i in 1:dimension])))
+        current_state = argmax(((previous_eigenstate[findall(x->x in site_pair_indexes,previous_site_pair_indexes)]' * evecs[findall(x->x in previous_site_pair_indexes,site_pair_indexes),:])[:]).^2)
         current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
         current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
 
