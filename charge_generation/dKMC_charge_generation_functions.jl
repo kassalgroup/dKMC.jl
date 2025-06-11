@@ -410,7 +410,7 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
     exciton = true 
     
     #Calculating the current Hamiltonian, the polaron transformed Hamiltonian, the reference matrices.
-    H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index = setup_hamiltonian.current_charge_generation_hamiltonian(dimension,N,exciton,LUMO_HOMO_energies,exciton_binding_energies,electronic_couplings,transition_dipole_moments,dipole_orientations,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location,current_exciton_location)
+    H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index,site_pair_indexes = setup_hamiltonian.current_charge_generation_hamiltonian(dimension,N,exciton,LUMO_HOMO_energies,exciton_binding_energies,electronic_couplings,transition_dipole_moments,dipole_orientations,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location,current_exciton_location)
 
     #Finding which sites correspond to exciton and CT site pairs.
     donor_exciton_sites, acceptor_exciton_sites, donor_CT_sites, acceptor_CT_sites, interfacial_CT_sites = find_exciton_and_CT_site_pairs(N,electron_r,hole_r)
@@ -481,14 +481,16 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         end 
 
         #Rediagonalise a new subset of the Hamiltonian.
-        H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index = setup_hamiltonian.current_charge_generation_hamiltonian(dimension,N,exciton,LUMO_HOMO_energies,exciton_binding_energies,electronic_couplings,transition_dipole_moments,dipole_orientations,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location,current_exciton_location)
+        previous_eigenstate = evecs[:,current_state]
+        previous_site_pair_indexes = copy(site_pair_indexes)
+        H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index,site_pair_indexes = setup_hamiltonian.current_charge_generation_hamiltonian(dimension,N,exciton,LUMO_HOMO_energies,exciton_binding_energies,electronic_couplings,transition_dipole_moments,dipole_orientations,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location,current_exciton_location)
         donor_exciton_sites, acceptor_exciton_sites, donor_CT_sites, acceptor_CT_sites, interfacial_CT_sites = find_exciton_and_CT_site_pairs(N,electron_r,hole_r)
         exciton_sites = vcat(donor_exciton_sites,acceptor_exciton_sites)
         evals,evecs = eigen(Ht)
         excitons = findall(x->x>exciton_population_cutoff,sum(evecs[exciton_sites,:].^2,dims=1)[:])
         electron_centres = [[evecs[:,i]' * Diagonal(electron_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
         hole_centres = [[evecs[:,i]' * Diagonal(hole_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        current_state = argmin(sqrt.(sum([(electron_centres[i] .- current_electron_location[i]).^2 for i in 1:dimension])) .+ sqrt.(sum([(hole_centres[i] .- current_hole_location[i]).^2 for i in 1:dimension])))
+        current_state = argmax(((previous_eigenstate[findall(x->x in site_pair_indexes,previous_site_pair_indexes)]' * evecs[findall(x->x in previous_site_pair_indexes,site_pair_indexes),:])[:]).^2)
         current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
         current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
 

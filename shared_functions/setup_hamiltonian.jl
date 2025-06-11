@@ -27,6 +27,7 @@ Creates a hamiltonian for a subset of sites within a hamiltonian radius of the c
 - `Ht`: The polaron-transformed system hamiltonian for the subset of sites. 
 - `r`: Matrix containing the position of every site in the hamiltonian.
 - `transformed_coupling`: Matrix containing only polaron-transformed coupling terms, used for dKMC rate calculations.
+- `site_indexes`: Vector containing the indexes of each site included in the Hamiltonian subset.
     
 """
 function current_charge_transport_hamiltonian(dimension::Integer,N::Integer,site_energies::Vector{<:AbstractFloat},electronic_coupling::Number,bath_reorganisation_energy::Number,kappa::AbstractFloat,hamiltonian_radius::Number,current_location::Vector{<:AbstractFloat})
@@ -53,7 +54,10 @@ function current_charge_transport_hamiltonian(dimension::Integer,N::Integer,site
             end
         end
     end
-    
+
+    #Create a list of indexes to all sites within the hamiltonian subset.
+    site_indexes = location_to_index.(dimension,N,site_locations)
+
     #Predefine the size of hamiltonian matrix and position vectors.
     hamiltonian_size = length(site_locations)
     H = zeros(hamiltonian_size,hamiltonian_size)
@@ -63,7 +67,7 @@ function current_charge_transport_hamiltonian(dimension::Integer,N::Integer,site
     for (i,site_location) in enumerate(site_locations)
 
         #Fill the diagonal elements of H with the appropriate site energy.
-        H[i,i] = site_energies[location_to_index(dimension,N,site_location)]
+        H[i,i] = site_energies[site_indexes[i]]
         
         #Fill the position matrix with coordinates of the site.
         r[i,:] = site_location
@@ -90,7 +94,7 @@ function current_charge_transport_hamiltonian(dimension::Integer,N::Integer,site
         Ht[i,i] = H[i,i] - bath_reorganisation_energy
     end
 
-    return H,Ht,r,transformed_coupling
+    return H,Ht,r,transformed_coupling,site_indexes
 
 end
 
@@ -253,6 +257,7 @@ Creates a hamiltonian for a subset of exciton sites within an exciton hamiltonia
 - `Ht`: The polaron-transformed system hamiltonian for the subset of sites. 
 - `r`: Matrix containing the position of every site in the hamiltonian.
 - `transformed_coupling`: Matrix containing only polaron-transformed coupling terms, used for dKMC rate calculations.
+- `site_indexes`: Vector containing the indexes of each site included in the Hamiltonian subset.
 
 """
 function current_exciton_transport_hamiltonian(dimension::Integer,N::Integer,exciton_site_energies::Vector{<:AbstractFloat},dipole_orientations::Matrix{<:AbstractFloat},transition_dipole_moment::Number,epsilon_r::Number,bath_reorganisation_energy::Number,kappa::AbstractFloat,site_spacing::Number,exciton_hamiltonian_radius::Number,current_location::Vector{<:AbstractFloat})
@@ -262,27 +267,26 @@ function current_exciton_transport_hamiltonian(dimension::Integer,N::Integer,exc
 
     #Create a list of the coordinates of sites that are within the hamiltonian radius.
     site_locations = Vector{Integer}[]
-    site_indexes = Integer[]
     if dimension == 1
         for x in accessible_coordinates[1]
             push!(site_locations,[x])
-            push!(site_indexes,location_to_index(dimension,N,[x]))
         end
     elseif dimension == 2
         for x in accessible_coordinates[1], y in accessible_coordinates[2] 
             if (x-current_location[1])^2 + (y-current_location[2])^2 <= exciton_hamiltonian_radius^2
                 push!(site_locations,[x,y])
-                push!(site_indexes,location_to_index(dimension,N,[x,y]))
             end
         end
     elseif dimension == 3
         for x in accessible_coordinates[1], y in accessible_coordinates[2], z in accessible_coordinates[3] 
             if (x-current_location[1])^2 + (y-current_location[2])^2 + (z-current_location[3])^2 <= exciton_hamiltonian_radius^2
                 push!(site_locations,[x,y,z])
-                push!(site_indexes,location_to_index(dimension,N,[x,y,z]))
             end
         end
     end
+
+    #Create a list of indexes to all sites within the hamiltonian subset.
+    site_indexes = location_to_index.(dimension,N,site_locations)
 
     #Predefine the size of hamiltonian matrix and position vectors.
     hamiltonian_size = length(site_locations)
@@ -315,7 +319,7 @@ function current_exciton_transport_hamiltonian(dimension::Integer,N::Integer,exc
         Ht[i,i] = H[i,i] - bath_reorganisation_energy
     end
 
-    return H,Ht,r,transformed_coupling
+    return H,Ht,r,transformed_coupling,site_indexes
 
 end
 
@@ -381,6 +385,7 @@ electron and hole.
 - `electron_index`: Vector of indices to only the electron position of every site-pair.
 - `hole_index`: Vector of indices to only the hole position of every site-pair.
 - `bath_index`: Matrix of references to which particle type, and therefore which bath, corresponds to the coupling elements in Hamiltonian (1 for electrons, 2 for holes).
+- `site_pair_indexes`: Vector containing vectors of the indexes of the electron and hole sites for the site-pairs included in the Hamiltonian subset.
 
 """
 function current_charge_separation_hamiltonian(dimension::Integer,N::Integer,energies::Vector{<:AbstractFloat},electronic_couplings::Vector{<:Number},epsilon_r::Number,site_spacing::Number,bath_reorganisation_energies::Vector{<:Number},kappas::Vector{<:AbstractFloat},hamiltonian_radii::Vector{<:AbstractFloat},current_electron_location::Vector{<:AbstractFloat},current_hole_location::Vector{<:AbstractFloat})
@@ -415,6 +420,9 @@ function current_charge_separation_hamiltonian(dimension::Integer,N::Integer,ene
         end
     end
 
+    #Create a list of vectors of indexes to electron and hole sites for site-pairs within the hamiltonian subset.
+    site_pair_indexes = [[location_to_index(dimension,N,site_locations[i][1]), location_to_index(dimension,N,site_locations[i][2])] for i in eachindex(site_locations)]
+
     #Predefine the size of hamiltonian matrix, charge position reference vectors, charge index vectors, and bath index vector.
     hamiltonian_size = length(site_locations)
     H = zeros(hamiltonian_size,hamiltonian_size)
@@ -433,8 +441,8 @@ function current_charge_separation_hamiltonian(dimension::Integer,N::Integer,ene
         hole_r[i,:] = hole_site_location
 
         #Fill the charge index vectors.
-        electron_index[i] = location_to_index(dimension,N,electron_site_location)
-        hole_index[i] = location_to_index(dimension,N,hole_site_location)
+        electron_index[i] = site_pair_indexes[i][1]
+        hole_index[i] = site_pair_indexes[i][2]
 
         #Assign energy of pair site to diagonal element in Hamiltonian.
         H[i,i] = energies[electron_index[i]] - energies[hole_index[i]] + charge_separation_couloumb_interaction(dimension,electron_site_location,hole_site_location,epsilon_r,site_spacing)
@@ -464,7 +472,7 @@ function current_charge_separation_hamiltonian(dimension::Integer,N::Integer,ene
         transformed_coupling[i,i] = 0
     end
 
-    return H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index
+    return H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index,site_pair_indexes
 
 end
 
@@ -641,6 +649,7 @@ hole, and exciton.
 - `hole_index`: Vector of indices to only the hole position of every site-pair.
 - `exciton_index`: Vector of indices to only the exciton position of every site-pair.
 - `bath_index`: Matrix of references to which particle type, and therefore which bath, corresponds to the coupling elements in Hamiltonian (1 for electrons, 2 for holes, 3 for excitons).
+- `site_pair_indexes`: Vector containing vectors of the indexes of the electron and hole sites for the site-pairs included in the Hamiltonian subset.
 
 """
 function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exciton::Bool,LUMO_HOMO_energies::Matrix{<:AbstractFloat},exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},transition_dipole_moments::Vector{<:Number},dipole_orientations::Matrix{<:AbstractFloat},epsilon_r::Number,site_spacing::Number,bath_reorganisation_energies::Vector{<:Number},kappas::Vector{<:AbstractFloat},hamiltonian_radii::Matrix{<:AbstractFloat},current_electron_location::Vector{<:AbstractFloat},current_hole_location::Vector{<:AbstractFloat},current_exciton_location::Vector{<:AbstractFloat})
@@ -693,6 +702,9 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
         end
     end
 
+    #Create a list of vectors of indexes to electron and hole sites for site-pairs within the hamiltonian subset.
+    site_pair_indexes = [[location_to_index(dimension,N,site_locations[i][1]), location_to_index(dimension,N,site_locations[i][2])] for i in eachindex(site_locations)]
+
     #Creating empty hamiltonian matrices, charge position reference matrices, dipole orientation matrices, charge index vectors, and bath index vector. 
     hamiltonian_size = length(site_locations)
     H = zeros(hamiltonian_size,hamiltonian_size)
@@ -711,18 +723,18 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
         #Fill the charge position and index reference vectors.
         electron_r[i,:] = electron_site_location
         hole_r[i,:] = hole_site_location
-        electron_index[i] = location_to_index(dimension,N,electron_site_location)
-        hole_index[i] = location_to_index(dimension,N,hole_site_location)
+        electron_index[i] = site_pair_indexes[i][1]
+        hole_index[i] = site_pair_indexes[i][2]
 
         #If the site-pair represents an exciton, save the dipole orientation to dipole vector.
         separation = sqrt(separation_squared(dimension,electron_site_location,hole_site_location))
         if separation == 0
-            exciton_index[i] = location_to_index(dimension,N,electron_site_location)
+            exciton_index[i] = site_pair_indexes[i][1]
             dipoles[i,:] = dipole_orientations[exciton_index[i],:]
         end
 
         #Assign energy of pair site to diagonal element in Hamiltonian.
-        E = LUMO_HOMO_energies[1,electron_index[i]] - LUMO_HOMO_energies[2,hole_index[i]] + charge_generation_coulomb_interaction(dimension,N,electron_site_location,hole_site_location,exciton_binding_energies,epsilon_r,site_spacing)
+        E = LUMO_HOMO_energies[1,site_pair_indexes[i][1]] - LUMO_HOMO_energies[2,site_pair_indexes[i][2]] + charge_generation_coulomb_interaction(dimension,N,electron_site_location,hole_site_location,exciton_binding_energies,epsilon_r,site_spacing)
         H[i,i] = E
 
         #Calculate the energy of the site-pair following polaron transformation and assign to the diagonal element of Ht.
@@ -771,7 +783,7 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
                     else
                         transition_dipole_moment_2 = transition_dipole_moments[2]
                     end
-                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipoles[i,:],dipole_orientations[location_to_index(dimension,N,electron_site_location_2),:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
+                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i2][1],:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
                     Ht[i,i_2] = Ht[i_2,i] =  kappas[3]*H[i,i_2]
                 end
             end
@@ -785,7 +797,7 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
         transformed_coupling[i,i] = 0
     end
 
-    return H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index
+    return H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index,site_pair_indexes
     
 end
 
