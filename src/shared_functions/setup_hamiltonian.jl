@@ -783,7 +783,7 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
                     else
                         transition_dipole_moment_2 = transition_dipole_moments[2]
                     end
-                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i2][1],:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
+                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i_2][1],:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
                     Ht[i,i_2] = Ht[i_2,i] =  kappas[3]*H[i,i_2]
                 end
             end
