@@ -25,7 +25,7 @@ Advances 2022, 8, eabl9692.
 ────────────────────────────────────────────────────────────────────────────────
 
 Julia version:  1.11.4
-Start time:     2025-04-28T14:01:15.669
+Start time:     2025-07-22T12:24:31.960
 
 ────────────────────────────────────────────────────────────────────────────────
 User input:
@@ -62,33 +62,33 @@ Results:
 ────────────────────────────────────────────────────────────────────────────────
 All uncertanties included below are standard errors of the mean.
 
-Internal quantum efficiency: 0.5492000000000001 ± 0.01403910454610474
+Internal quantum efficiency: 0.5832999999999997 ± 0.01377609853662828
 
 Proportion of all possible outcomes:
-    1. Separation: 0.5492000000000001 ± 0.01403910454610474
-    2. Recombination: 0.4244999999999998 ± 0.013873796604831446
-    3. Exceeded maximum hops cutoff: 0.02630000000000001 ± 0.0038721187098671615
+    1. Separation: 0.5832999999999997 ± 0.01377609853662828
+    2. Recombination: 0.3972000000000003 ± 0.013537186392135357
+    3. Exceeded maximum hops cutoff: 0.019499999999999997 ± 0.003085331306240751
     4. Reached the edge of the system: 0.0 ± 0.0
 
 Mean characteristics of the initial state:
-    Energy (meV): 984.2844759384592 ± 6.782454322991269
-    Inverse participation ratio: 1.3424747594178879 ± 0.014728902445115448
-    Electron-hole separation (nm): 1.1755029389411846 ± 0.007550542662477366
+    Energy (meV): 991.3759246970508 ± 6.658715804433843
+    Inverse participation ratio: 1.3843725708809185 ± 0.016166214341396454
+    Electron-hole separation (nm): 1.1984153038025585 ± 0.008333544641136092
 
 For trajectories where charges separate:
-    Mean separation time (s): 2.5467584361918657e-10 ± 6.672454467968623e-11
+    Mean separation time (s): 2.0544897160603737e-10 ± 4.328247356384553e-11
     Mean characteristics of the initial state:
-        Energy (meV): 1069.612223567335 ± 6.655926225172842
-        Inverse participation ratio: 1.4299583492839913 ± 0.01885018105736372
-        Electron-hole separation: 1.2221720924738435 ± 0.00970176969923288
+        Energy (meV): 1058.002888103937 ± 6.6656911888378065
+        Inverse participation ratio: 1.4544825214545212 ± 0.01955205118829312
+        Electron-hole separation: 1.2373015715769389 ± 0.010135543547121343
     Mean characteristics of the final state:
-        Energy (meV): 1051.6251327467446 ± 5.453633898144481
-        Inverse participation ratio: 1.783009153768048 ± 0.026333913491423007
-        Electron-hole separation (nm): 5.831735369019423 ± 0.020046596651631103
+        Energy (meV): 1052.9259720838345 ± 5.328016428079321
+        Inverse participation ratio: 1.814827135516408 ± 0.026643902271604084
+        Electron-hole separation (nm): 5.850708501013454 ± 0.02051958431056831
 
 ────────────────────────────────────────────────────────────────────────────────
 
 Evaluation completed successfully.
-End time:       2025-04-28T14:10:47.545
+End time:       2025-07-22T12:30:30.079
 
 ────────────────────────────────────────────────────────────────────────────────

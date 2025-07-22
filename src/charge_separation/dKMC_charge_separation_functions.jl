@@ -279,15 +279,15 @@ function dKMC_charge_separation(dimension::Integer,N::Integer,energies::Vector{<
     evals,evecs = eigen(Ht)
 
     #Calculating the expectation value of positions of energy eigenstates.
-    electron_centres = [[evecs[:,i]' * Diagonal(electron_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-    hole_centres = [[evecs[:,i]' * Diagonal(hole_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
+    electron_centres = setup_hamiltonian.compute_centres(dimension,evecs,electron_r)
+    hole_centres = setup_hamiltonian.compute_centres(dimension,evecs,hole_r)
 
     #Choose initial CT state closest to middle of system.
-    current_state = argmin(sqrt.(sum([(electron_centres[i] .- current_electron_location[i]).^2 for i in 1:dimension])) .+ sqrt.(sum([(hole_centres[i] .- current_hole_location[i]).^2 for i in 1:dimension])))
+    current_state = argmin(sqrt.(sum([(electron_centres[:,i] .- current_electron_location[i]).^2 for i in 1:dimension])) .+ sqrt.(sum([(hole_centres[:,i] .- current_hole_location[i]).^2 for i in 1:dimension])))
 
     #Recording characteristics of the current state.
-    current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
-    current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
+    current_electron_location = electron_centres[current_state,:]
+    current_hole_location = hole_centres[current_state,:]
     current_energy = evals[current_state]
     current_IPR = 1/sum(evecs[:,current_state].^4)
     current_separation = sqrt(sum((current_electron_location .- current_hole_location).^2)) * site_spacing
@@ -316,14 +316,14 @@ function dKMC_charge_separation(dimension::Integer,N::Integer,energies::Vector{<
         H,Ht,electron_r,hole_r,transformed_coupling,electron_index,hole_index,bath_index,site_pair_indexes = setup_hamiltonian.current_charge_separation_hamiltonian(dimension,N,energies,electronic_couplings,epsilon_r,site_spacing,bath_reorganisation_energies,kappas,hamiltonian_radii,current_electron_location,current_hole_location)
         interfacial_sites = findall(x->x==1,sum([(electron_r[:,i] .- hole_r[:,i]).^2 for i in 1:dimension]))
         evals,evecs = eigen(Ht)
-        electron_centres = [[evecs[:,i]' * Diagonal(electron_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        hole_centres = [[evecs[:,i]' * Diagonal(hole_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        current_state = argmax(((previous_eigenstate[findall(x->x in site_pair_indexes,previous_site_pair_indexes)]' * evecs[findall(x->x in previous_site_pair_indexes,site_pair_indexes),:])[:]).^2)
-        current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
-        current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
+        electron_centres = setup_hamiltonian.compute_centres(dimension,evecs,electron_r)
+        hole_centres = setup_hamiltonian.compute_centres(dimension,evecs,hole_r)
+        current_state = argmax(((previous_eigenstate[findall(in(site_pair_indexes),previous_site_pair_indexes)]' * evecs[findall(in(previous_site_pair_indexes),site_pair_indexes),:])[:]).^2)
+        current_electron_location = electron_centres[current_state,:]
+        current_hole_location = hole_centres[current_state,:]
 
         #Finding which states are accessible from the current state.
-        accessible_states = findall(x-> 0 < x < 1,(sum([(electron_centres[i] .- current_electron_location[i]).^2 for i in 1:dimension]))./(hopping_radii[1]^2) .+ (sum([(hole_centres[i] .- current_hole_location[i]).^2 for i in 1:dimension]))./(hopping_radii[2]^2))
+        accessible_states = findall(x-> 0 < x < 1,(sum([(electron_centres[:,i] .- current_electron_location[i]).^2 for i in 1:dimension]))./(hopping_radii[1]^2) .+ (sum([(hole_centres[:,i] .- current_hole_location[i]).^2 for i in 1:dimension]))./(hopping_radii[2]^2))
 
         #Calculating hopping rates to all states in accessible_states.
         hopping_rates = zeros(length(accessible_states))
@@ -366,8 +366,8 @@ function dKMC_charge_separation(dimension::Integer,N::Integer,energies::Vector{<
         current_state = accessible_states[index]
 
         #Recording the characteristics of the new state.
-        current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
-        current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
+        current_electron_location = electron_centres[current_state,:]
+        current_hole_location = hole_centres[current_state,:]
         current_energy = evals[current_state]
         current_IPR = 1/sum(evecs[:,current_state].^4)
         current_separation = sqrt(sum((current_electron_location .- current_hole_location).^2)) * site_spacing

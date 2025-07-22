@@ -423,16 +423,16 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
     excitons = findall(x->x>exciton_population_cutoff,sum(evecs[exciton_sites,:].^2,dims=1)[:])
 
     #Calculating the average positions of energy eigenstates.
-    electron_centres = [[evecs[:,i]' * Diagonal(electron_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-    hole_centres = [[evecs[:,i]' * Diagonal(hole_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-    exciton_centres = [[(evecs[exciton_sites,i]' * Diagonal(electron_r[:,j][exciton_sites]) * evecs[exciton_sites,i])/(evecs[exciton_sites,i]'*evecs[exciton_sites,i]) for i=eachindex(evals)] for j in 1:dimension]
+    electron_centres = setup_hamiltonian.compute_centres(dimension,evecs,electron_r)
+    hole_centres = setup_hamiltonian.compute_centres(dimension,evecs,hole_r)    
+    exciton_centres =  setup_hamiltonian.compute_centres(dimension,evecs[exciton_sites,:]./sqrt.(sum(evecs[exciton_sites,:].^2, dims=1)),electron_r[exciton_sites,:])
     
     #Finding donor exciton states within a radius of 1 of the chosen initial position of the electron.
     excitation_radius = 1
-    accessible_excitons = excitons[findall(x->x<=excitation_radius,sqrt.(sum([(exciton_centres[i][excitons] .- current_exciton_location[i]).^2 for i in 1:dimension])))]
+    accessible_excitons = excitons[findall(x->x<=excitation_radius,sqrt.(sum([(exciton_centres[:,i][excitons] .- current_exciton_location[i]).^2 for i in 1:dimension])))]
     while isempty(accessible_excitons)
         excitation_radius += 1
-        accessible_excitons = excitons[findall(x->x<=excitation_radius,sqrt.(sum([(exciton_centres[i][excitons] .- current_exciton_location[i]).^2 for i in 1:dimension])))]
+        accessible_excitons = excitons[findall(x->x<=excitation_radius,sqrt.(sum([(exciton_centres[:,i][excitons] .- current_exciton_location[i]).^2 for i in 1:dimension])))]
     end
 
     #Choosing the initial state from accessible_excitons probabilistically based on the expectation value of each state's dipole moment.
@@ -446,9 +446,9 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
     end
 
     #Recording characteristics of the current state.
-    current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
-    current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
-    current_exciton_location = [exciton_centres[i][current_state] for i in 1:dimension]
+    current_electron_location = electron_centres[current_state,:]
+    current_hole_location = hole_centres[current_state,:]
+    current_exciton_location = exciton_centres[current_state,:]
     current_energy = evals[current_state]
     current_IPR = 1/sum(evecs[:,current_state].^4)
     current_separation = sqrt(sum((current_electron_location .- current_hole_location).^2)) * site_spacing
@@ -488,11 +488,11 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         exciton_sites = vcat(donor_exciton_sites,acceptor_exciton_sites)
         evals,evecs = eigen(Ht)
         excitons = findall(x->x>exciton_population_cutoff,sum(evecs[exciton_sites,:].^2,dims=1)[:])
-        electron_centres = [[evecs[:,i]' * Diagonal(electron_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        hole_centres = [[evecs[:,i]' * Diagonal(hole_r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        current_state = argmax(((previous_eigenstate[findall(x->x in site_pair_indexes,previous_site_pair_indexes)]' * evecs[findall(x->x in previous_site_pair_indexes,site_pair_indexes),:])[:]).^2)
-        current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
-        current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
+        electron_centres = setup_hamiltonian.compute_centres(dimension,evecs,electron_r)
+        hole_centres = setup_hamiltonian.compute_centres(dimension,evecs,hole_r)    
+        current_state = argmax(((previous_eigenstate[findall(in(site_pair_indexes),previous_site_pair_indexes)]' * evecs[findall(in(previous_site_pair_indexes),site_pair_indexes),:])[:]).^2)
+        current_electron_location = electron_centres[current_state,:]
+        current_hole_location = hole_centres[current_state,:]
 
         #Assigning which approximating_radii to use for each charge.
         if current_electron_location[1] <= N/2
@@ -513,13 +513,13 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
 
         #Finding which states are accessible from the current state.
         if exciton == true
-            exciton_centres = [[(evecs[exciton_sites,i]' * Diagonal(electron_r[exciton_sites,j]) * evecs[exciton_sites,i])/(evecs[exciton_sites,i]'*evecs[exciton_sites,i]) for i=eachindex(evals)] for j in 1:dimension]
-            current_exciton_location = [exciton_centres[i][current_state] for i in 1:dimension]
-            accessible_exciton_states = excitons[findall(x-> 0 < x <1,(sum([(exciton_centres[i][excitons] .- current_exciton_location[i]).^2 for i in 1:dimension]))./(exciton_hopping_radius^2))]
-            accessible_charges_states = setdiff(findall(x-> 0 < x < 1,(sum([(electron_centres[i] .- current_electron_location[i]).^2 for i in 1:dimension]))./(electron_hopping_radius^2) .+ (sum([(hole_centres[i] .- current_hole_location[i]).^2 for i in 1:dimension]))./(hole_hopping_radius^2)),accessible_exciton_states)
+            exciton_centres =  setup_hamiltonian.compute_centres(dimension,evecs[exciton_sites,:]./sqrt.(sum(evecs[exciton_sites,:].^2, dims=1)),electron_r[exciton_sites,:])
+            current_exciton_location = exciton_centres[current_state,:]
+            accessible_exciton_states = excitons[findall(x-> 0 < x <1,(sum([(exciton_centres[:,i][excitons] .- current_exciton_location[i]).^2 for i in 1:dimension]))./(exciton_hopping_radius^2))]
+            accessible_charges_states = setdiff(findall(x-> 0 < x < 1,(sum([(electron_centres[:,i] .- current_electron_location[i]).^2 for i in 1:dimension]))./(electron_hopping_radius^2) .+ (sum([(hole_centres[:,i] .- current_hole_location[i]).^2 for i in 1:dimension]))./(hole_hopping_radius^2)),accessible_exciton_states)
             accessible_states = vcat(accessible_exciton_states,accessible_charges_states)
         elseif exciton == false
-            accessible_states = findall(x-> 0 < x < 1,(sum([(electron_centres[i] .- current_electron_location[i]).^2 for i in 1:dimension]))./(electron_hopping_radius^2) .+ (sum([(hole_centres[i] .- current_hole_location[i]).^2 for i in 1:dimension]))./(hole_hopping_radius^2))
+            accessible_states = findall(x-> 0 < x < 1,(sum([(electron_centres[:,i] .- current_electron_location[i]).^2 for i in 1:dimension]))./(electron_hopping_radius^2) .+ (sum([(hole_centres[:,i] .- current_hole_location[i]).^2 for i in 1:dimension]))./(hole_hopping_radius^2))
         end
 
         #Calculating hopping rates to all states in accessible_states.
@@ -586,8 +586,8 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         else
             exciton = false
         end	
-        current_electron_location = [electron_centres[i][current_state] for i in 1:dimension]
-        current_hole_location = [hole_centres[i][current_state] for i in 1:dimension]
+        current_electron_location = electron_centres[current_state,:]
+        current_hole_location = hole_centres[current_state,:]
         current_energy = evals[current_state]
         current_IPR = 1/sum(evecs[:,current_state].^4)
         current_separation = sqrt(sum((current_electron_location .- current_hole_location).^2)) * site_spacing

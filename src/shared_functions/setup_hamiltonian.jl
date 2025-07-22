@@ -801,5 +801,37 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
     
 end
 
+
+"""
+    compute_centres(evecs::AbstractMatrix,r::AbstractMatrix)
+
+Calculates the centres, expectation value of position, of the eigenstates.
+
+# Arguments:
+- `evecs`: Energy eigenvectors of the polaron trasformed system hamiltonian.
+- `r`: Matrix containing the position of every site in the hamiltonian.
+
+# Output:
+- `centres`: Matrix containing the coordinates of the centres of eigenstates, the expectation of the eigenstates position.
+
+"""
+function compute_centres(dimension::Integer,evecs::AbstractMatrix,r::AbstractMatrix)
+
+    n_sites, n_states = size(evecs)
+    centres = Matrix{Float64}(undef, n_states, dimension)
+    @inbounds for j in 1:dimension
+        for i in 1:n_states
+            acc = 0.0
+            @simd for k in 1:n_sites
+                acc += r[k, j] * abs2(evecs[k, i])
+            end
+            centres[i, j] = acc
+        end
+    end
+    
+    return centres
+
+end
+
 end
 
