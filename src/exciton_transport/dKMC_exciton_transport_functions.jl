@@ -224,19 +224,19 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
     evals,evecs = eigen(Ht)
 
     #Calculating the expectation value of positions of energy eigenstates.
-    centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
+    centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
 
     #Choose initial state closest to middle of system.
-    current_state = argmin(sum([(centres[i] .- current_location[i]).^2 for i in 1:dimension]))
+    current_state = argmin(sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension]))
 
     #Setting the initial conditions.
     t = 0.0
 
     #Creating lists to track time, positions, squared displacement, energy, and IPR.
     times = [t]
-    current_location = [centres[i][current_state] for i in 1:dimension]
-    initial_location = current_location
-    squared_displacements = [sum([(initial_location[i] - current_location[i])^2 for i in 1:dimension])]
+    current_location = centres[current_state,:]
+    initial_location = copy(current_location)
+    squared_displacements = [sum((initial_location .- current_location).^2)]
     energies = [evals[current_state]]
     IPRs = [1/sum(evecs[:,current_state].^4)]
 
@@ -254,12 +254,12 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
         previous_site_indexes = copy(site_indexes)
         H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
         evals,evecs = eigen(Ht)
-        centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-        current_state = argmax(((previous_eigenstate[findall(x->x in site_indexes,previous_site_indexes)]' * evecs[findall(x->x in previous_site_indexes,site_indexes),:])[:]).^2)
-        current_location = [centres[i][current_state] for i in 1:dimension]
+        centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
+        current_state = argmax(((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[findall(in(previous_site_indexes),site_indexes),:])[:]).^2)
+        current_location = centres[current_state,:]
 
         #Finding which states are accessible from the current state.
-        accessible_states = findall(x-> 0 .< x .< exciton_hopping_radius^2, sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension]))
+        accessible_states = findall(x-> 0 .< x .< exciton_hopping_radius^2, sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension]))
 
         #Calculating hopping rates to all states in accessible_states.
         hopping_rates = zeros(length(accessible_states))
@@ -283,7 +283,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
         #Selected hop is chosen propabalistically in proportion to the hopping rate. 
         ran = rand()
         current_state = accessible_states[findfirst(x->x>ran*hopping_rate_sum,cumsum(hopping_rates))]
-        current_location = [centres[i][current_state] for i in 1:dimension]
+        current_location = centres[current_state,:]
 
         #Time updated by calculating elapsed time.
         ran2 = rand()
@@ -291,7 +291,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
         
         #Recording the new time, positions, squared displacement, energy, and IPR.
         push!(times,t)
-        push!(squared_displacements,sum([(initial_location[i] - current_location[i])^2 for i in 1:dimension]))
+        push!(squared_displacements,sum((initial_location .- current_location).^2))
         push!(energies,evals[current_state])
         push!(IPRs,1/sum(evecs[:,current_state].^4))
 

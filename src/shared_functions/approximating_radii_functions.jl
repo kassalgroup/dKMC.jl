@@ -123,14 +123,14 @@ function charge_approximating_radii(dimension::Integer,N::Integer,disorder::Numb
     evals,evecs = eigen(Ht)
 
     #Calculating the expectation value of positions of energy eigenstates.
-    centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
+    centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
 
     #Choose initial state closest to middle of system.
-    current_state = argmin(sum([(centres[i] .- current_location[i]).^2 for i in 1:dimension]))
-    current_location = [centres[i][current_state] for i in 1:dimension]
+    current_state = argmin(sum([(centres[:,i] .- current_location[i]).^2 for i in 1:dimension]))
+    current_location = centres[current_state,:]
 
     #Calculating distance from every state to the current state.
-    distances_squared = sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension])
+    distances_squared = sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension])
 
     #Create an empty vector to store hamiltonian information at each increase in hamiltonian radius, and then store the current hamiltonian information.
     stored_hamiltonian_information = Vector{Any}(zeros(Int(round(N/2))))
@@ -172,17 +172,17 @@ function charge_approximating_radii(dimension::Integer,N::Integer,disorder::Numb
                 previous_site_indexes = copy(site_indexes)
                 H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_charge_transport_hamiltonian(dimension,N,site_energies,electronic_coupling,bath_reorganisation_energy,kappa,hamiltonian_radius,current_location)
                 evals,evecs = eigen(Ht)
-                centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-                current_state = argmax(((previous_eigenstate[findall(x->x in site_indexes,previous_site_indexes)]' * evecs[findall(x->x in previous_site_indexes,site_indexes),:])[:]).^2)
-                current_location = [centres[i][current_state] for i in 1:dimension]
-                distances_squared = sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension])
+                centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
+                current_state = argmax(((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[findall(in(previous_site_indexes),site_indexes),:])[:]).^2)
+                current_location = centres[current_state,:]
+                distances_squared = sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension])
                 stored_hamiltonian_information[hamiltonian_radius] = [H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared]
             else
                 H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared = stored_hamiltonian_information[hamiltonian_radius]
             end
 
             #Finding states that are within the new hopping_radius, but not the previous hopping_radius.
-            accessible_states = setdiff(findall(x->x < hopping_radius^2, distances_squared),findall(x->x <= hopping_radii[end]^2,distances_squared))
+            accessible_states = findall(x-> 0 < x <= hopping_radius^2, distances_squared)
             
             #If there are no accessible_states within current hamiltonian_radius, increase the radii and set up and rediagonalise a larger subset of the Hamiltonian.
             if isempty(accessible_states)
@@ -194,16 +194,16 @@ function charge_approximating_radii(dimension::Integer,N::Integer,disorder::Numb
                         previous_site_indexes = copy(site_indexes)
                         H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_charge_transport_hamiltonian(dimension,N,site_energies,electronic_coupling,bath_reorganisation_energy,kappa,hamiltonian_radius,current_location)
                         evals,evecs = eigen(Ht)
-                        centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-                        current_state = argmax(((previous_eigenstate[findall(x->x in site_indexes,previous_site_indexes)]' * evecs[findall(x->x in previous_site_indexes,site_indexes),:])[:]).^2)
-                        current_location = [centres[i][current_state] for i in 1:dimension]
-                        distances_squared = sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension])
+                        centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
+                        current_state = argmax(((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[findall(in(previous_site_indexes),site_indexes),:])[:]).^2)
+                        current_location = centres[current_state,:]
+                        distances_squared = sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension])
                         stored_hamiltonian_information[hamiltonian_radius] = [H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared]
                     else
                         H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared = stored_hamiltonian_information[hamiltonian_radius]
                     end        
                 end
-                accessible_states = setdiff(findall(x->x .< hopping_radius^2, distances_squared),findall(x->x .<= (hopping_radii[end])^2,distances_squared))
+                accessible_states = findall(x-> 0 < x <= hopping_radius^2, distances_squared)
             end
 
             #Calculating hopping rates to all states in accessible_states.
@@ -216,7 +216,7 @@ function charge_approximating_radii(dimension::Integer,N::Integer,disorder::Numb
                     hopping_rates[f] = hopping_rate
                 end
             end
-            push!(hopping_rate_sum, total_hopping_rate_sum[end]+sum(hopping_rates))
+            push!(hopping_rate_sum, sum(hopping_rates))
 
             #Checking whether the hopping_rate_sum at hopping_radius has converged at hamiltonian_radius to a given accuracy.
             if hopping_rate_sum[b]/hopping_rate_sum[b+1] > accuracy && hopping_rate_sum[b+1]/hopping_rate_sum[b] > accuracy
@@ -368,14 +368,14 @@ function exciton_approximating_radii(dimension::Integer,N::Integer,exciton_disor
     evals,evecs = eigen(Ht)
 
     #Calculating the expectation value of positions of energy eigenstates.
-    centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
+    centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
 
     #Choose initial state closest to middle of system.
-    current_state = argmin(sum([(centres[i] .- current_location[i]).^2 for i in 1:dimension]))
-    current_location = [centres[i][current_state] for i in 1:dimension]
+    current_state = argmin(sum([(centres[:,i] .- current_location[i]).^2 for i in 1:dimension]))
+    current_location = centres[current_state,:]
 
     #Calculating distance from every state to the current state.
-    distances_squared = sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension])
+    distances_squared = sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension])
 
     #Create an empty vector to store hamiltonian information at each increase in hamiltonian radius, and then store the current hamiltonian information.
     stored_hamiltonian_information = Vector{Any}(zeros(Int(N/2)))
@@ -417,17 +417,17 @@ function exciton_approximating_radii(dimension::Integer,N::Integer,exciton_disor
                 previous_site_indexes = copy(site_indexes)
                 H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,exciton_bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
                 evals,evecs = eigen(Ht)
-                centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-                current_state = argmax(((previous_eigenstate[findall(x->x in site_indexes,previous_site_indexes)]' * evecs[findall(x->x in previous_site_indexes,site_indexes),:])[:]).^2)
-                current_location = [centres[i][current_state] for i in 1:dimension]
-                distances_squared = sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension])
+                centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
+                current_state = argmax(((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[findall(in(previous_site_indexes),site_indexes),:])[:]).^2)
+                current_location = centres[current_state,:]
+                distances_squared = sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension])
                 stored_hamiltonian_information[exciton_hamiltonian_radius] = [H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared]   
             else
                 H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared = stored_hamiltonian_information[exciton_hamiltonian_radius]
             end
 
             #Finding states that are within the new exciton_hopping_radius, but not the previous exciton_hopping_radius.
-            accessible_states = setdiff(findall(x->x .< exciton_hopping_radius^2, distances_squared),findall(x->x .<= (exciton_hopping_radii[end])^2,distances_squared))
+            accessible_states = findall(x-> 0 < x < exciton_hopping_radius^2, distances_squared)
 
             #If there are no accessible_states within current exciton_hamiltonian_radius, increase the radii and set up and rediagonalise a larger subset of the Hamiltonian.
             if isempty(accessible_states)
@@ -439,16 +439,16 @@ function exciton_approximating_radii(dimension::Integer,N::Integer,exciton_disor
                         previous_site_indexes = copy(site_indexes)
                         H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,exciton_bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
                         evals,evecs = eigen(Ht)
-                        centres = [[evecs[:,i]' * Diagonal(r[:,j]) * evecs[:,i] for i=eachindex(evals)] for j in 1:dimension]
-                        current_state = argmax(((previous_eigenstate[findall(x->x in site_indexes,previous_site_indexes)]' * evecs[findall(x->x in previous_site_indexes,site_indexes),:])[:]).^2)
-                        current_location = [centres[i][current_state] for i in 1:dimension]
-                        distances_squared = sum([(centres[i] .-  current_location[i]).^2 for i in 1:dimension])
+                        centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
+                        current_state = argmax(((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[findall(in(previous_site_indexes),site_indexes),:])[:]).^2)
+                        current_location = centres[current_state,:]
+                        distances_squared = sum([(centres[:,i] .-  current_location[i]).^2 for i in 1:dimension])
                         stored_hamiltonian_information[exciton_hamiltonian_radius] = [H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared]   
                     else
                         H,Ht,r,transformed_coupling,site_indexes,evals,evecs,centres,current_state,current_location,distances_squared = stored_hamiltonian_information[exciton_hamiltonian_radius]
                     end
                 end
-                accessible_states = setdiff(findall(x->x .< exciton_hopping_radius^2, distances_squared),findall(x->x .<= (exciton_hopping_radii[end])^2,distances_squared))
+                accessible_states = findall(x-> 0 < x < exciton_hopping_radius^2, distances_squared)
             end
 
             #Calculating hopping rates to all states in accessible_states.
@@ -461,7 +461,7 @@ function exciton_approximating_radii(dimension::Integer,N::Integer,exciton_disor
                     hopping_rates[f] = hopping_rate
                 end
             end
-            push!(exciton_hopping_rate_sum, total_exciton_hopping_rate_sum[end]+sum(hopping_rates))
+            push!(exciton_hopping_rate_sum, sum(hopping_rates))
 
             #Checking whether the exciton_hopping_rate_sum at exciton_hopping_radius has converged at exciton_hamiltonian_radius to a given accuracy.
             if exciton_hopping_rate_sum[b]/exciton_hopping_rate_sum[b+1] > accuracy && exciton_hopping_rate_sum[b+1]/exciton_hopping_rate_sum[b] > accuracy

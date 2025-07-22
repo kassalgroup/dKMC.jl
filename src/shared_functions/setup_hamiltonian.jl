@@ -783,7 +783,7 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
                     else
                         transition_dipole_moment_2 = transition_dipole_moments[2]
                     end
-                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i2][1],:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
+                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i_2][1],:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
                     Ht[i,i_2] = Ht[i_2,i] =  kappas[3]*H[i,i_2]
                 end
             end
@@ -799,6 +799,38 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
 
     return H,Ht,electron_r,hole_r,dipoles,transformed_coupling,electron_index,hole_index,exciton_index,bath_index,site_pair_indexes
     
+end
+
+
+"""
+    compute_centres(evecs::AbstractMatrix,r::AbstractMatrix)
+
+Calculates the centres, expectation value of position, of the eigenstates.
+
+# Arguments:
+- `evecs`: Energy eigenvectors of the polaron trasformed system hamiltonian.
+- `r`: Matrix containing the position of every site in the hamiltonian.
+
+# Output:
+- `centres`: Matrix containing the coordinates of the centres of eigenstates, the expectation of the eigenstates position.
+
+"""
+function compute_centres(dimension::Integer,evecs::AbstractMatrix,r::AbstractMatrix)
+
+    n_sites, n_states = size(evecs)
+    centres = Matrix{Float64}(undef, n_states, dimension)
+    @inbounds for j in 1:dimension
+        for i in 1:n_states
+            acc = 0.0
+            @simd for k in 1:n_sites
+                acc += r[k, j] * abs2(evecs[k, i])
+            end
+            centres[i, j] = acc
+        end
+    end
+    
+    return centres
+
 end
 
 end
