@@ -24,7 +24,7 @@ In summary:
 ## How to use:
 Before running any simulations:
 1. Install Julia from "https://julialang.org/downloads/".
-2. In Julia, install the dKMC package and its dependencies using: 
+2. In Julia, install the dKMC package dependencies using: 
 ```julia
 ] add https://github.com/kassalgroup/dKMC.jl
 ```
@@ -32,4 +32,10 @@ Before running any simulations:
 ```
 git clone https://github.com/kassalgroup/dKMC.jl.git
 ```
-4. For specific instructions on how to run each module, read the corresponding *README.md* file in each module.
+
+Running simulations:
+
+4. Navigate to the module you would like to run, and read the corresponding *README.md* file for specific instructions on how to run that module.
+
+## Typical Module Behaviour:
+Each module contains an example output file which demonstrates successful running of the module, shows the results produced by the module, and an example runtime for the simulations provided with the example input file. The example output files can therefore be used to check that the module is running normally.
