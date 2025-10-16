@@ -37,5 +37,5 @@ Running simulations:
 
 4. Navigate to the module you would like to run, and read the corresponding *README.md* file for specific instructions on how to run that module.
 
-## Typical Module Behaviour:
+## Typical module behaviour:
 Each module contains an example output file which demonstrates successful running of the module, shows the results produced by the module, and an example runtime for the simulations provided with the example input file. The example output files can therefore be used to check that the module is running normally.
