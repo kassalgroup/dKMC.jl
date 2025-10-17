@@ -108,11 +108,6 @@ function dKMC_charge_separation_results(dimension::Integer,N::Integer,disorders:
         mean_separated_final_state_characteristics = [mean(separated_final_state_characteristics); std(separated_final_state_characteristics)./sqrt(length(separated_final_state_characteristics))]
     end
 
-    #Print warning message if too many trajectories exceeded the maximum hops cutoff.
-    if mean_outcomes[1,3] > 0.05
-        @warn "A large proportion (>5%) of trajectories exceeded the maximum hops cutoff. Consider increasing the cutoff and repeating the calculation."
-    end    
-
     return 	mean_outcomes, mean_initial_state_characteristics, mean_separation_time, mean_separated_initial_state_characteristics, mean_separated_final_state_characteristics
 
 end
@@ -305,7 +300,6 @@ function dKMC_charge_separation(dimension::Integer,N::Integer,energies::Vector{<
 
         #Checking if either charge is too close to the edge of the landscape to create a new subset of the Hamiltonian.
         if iszero(current_electron_location .+ hamiltonian_radii[2] .> N) == false || iszero(current_hole_location .- hamiltonian_radii[1] .< 1) == false 
-            @warn "Simulation terminated as a charge carrier got too close to the edge of the system. Increase the length of the system (N) to avoid this error." 
             outcome = "reached the edge of the system"
             break
         end

@@ -51,6 +51,7 @@ chosen sampling times.
 - `sampling_time_energies`: The mean energies (and standard errors of the mean) across many realisations of disorder at chosen sampling_times (in meV).
 - `sampling_time_IPRs`: The mean IPRs (and standard errors of the mean) across many realisations of disorder at chosen sampling_times.
 - `total_hops`: The mean number of hops in each trajectory across many realisations of disorder.
+- `reached_boundary_proportion`: Proportion of all trajectories where the charge carrier reached the system boundary and terminated early.
 
 """
 function dKMC_exciton_transport_results(dimension::Integer,N::Integer,exciton_disorder::Number,transition_dipole_moment::Number,epsilon_r::Number,bath_reorganisation_energy::Number,bath_cutoff_energy::Number,T::Number,site_spacing::Number,landscape_iterations::Integer,trajectory_iterations::Integer,accuracy::AbstractFloat,end_time::Number,number_of_sampling_times::Integer;phi_limit=round(100*constants.hbar/bath_cutoff_energy),phi_step=phi_limit/10000,E_limit=round(6*exciton_disorder),E_step=E_limit/10000)
@@ -78,21 +79,24 @@ function dKMC_exciton_transport_results(dimension::Integer,N::Integer,exciton_di
     mean_energies = zeros(landscape_iterations,length(sampling_times))
     mean_IPRs = zeros(landscape_iterations,length(sampling_times))
     mean_total_hops = zeros(landscape_iterations)
+    total_reached_boundary_count = 0
     for i = 1:landscape_iterations
         mean_squared_displacements[i,:] = results[i][1]
         mean_energies[i,:] = results[i][2]
         mean_IPRs[i,:] = results[i][3]
         mean_total_hops[i] = results[i][4]
+        total_reached_boundary_count += results[i][5]
     end
     sampling_time_squared_displacements = constants.m2_to_nm2(site_spacing^2) .* [mean(mean_squared_displacements,dims=1); std(mean_squared_displacements,dims=1)./sqrt(landscape_iterations)]
     sampling_time_energies = [mean(mean_energies,dims=1); std(mean_energies,dims=1)./sqrt(landscape_iterations)]
     sampling_time_IPRs = [mean(mean_IPRs,dims=1); std(mean_IPRs,dims=1)./sqrt(landscape_iterations)]
     total_hops = [mean(mean_total_hops); std(mean_total_hops)./sqrt(landscape_iterations)]
+    reached_boundary_proportion = total_reached_boundary_count / (landscape_iterations*trajectory_iterations)
 
     #Calculate the diffusion coeffcient.
     diffusion_coefficient = calculate_diffusion_coefficient(sampling_time_squared_displacements[1,:],sampling_time_squared_displacements[2,:],sampling_times,dimension,site_spacing)
 
-    return diffusion_coefficient, sampling_time_squared_displacements, sampling_time_energies, sampling_time_IPRs, total_hops
+    return diffusion_coefficient, sampling_time_squared_displacements, sampling_time_energies, sampling_time_IPRs, total_hops, reached_boundary_proportion
 
 end
 
@@ -131,6 +135,7 @@ mean squared displacements, energies and IPRs at chosen sampling times.
 - `mean_energies`: The mean energies (in meV) across many trajectory iterations at chosen sampling_times.
 - `mean_IPRs`: The mean IPRs across many trajectory iterations at chosen sampling_times.
 - `mean_total_hops`: The mean total number of hops across many trajectory iterations.
+- `reached_boundary_count`: Number of trajectories where the charge carrier reached the system boundary and terminated early.
 
 """
 function iterate_dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_disorder::Number,transition_dipole_moment::Number,epsilon_r::Number,bath_reorganisation_energy::Number,kappa::AbstractFloat,site_spacing::Number,trajectory_iterations::Integer,accuracy::AbstractFloat,end_time::Number,sampling_times::Vector{<:AbstractFloat},exciton_hopping_radius::AbstractFloat,exciton_hamiltonian_radius::AbstractFloat,K_tot::Matrix{ComplexF64},E_step::Number,E_limit::Number)
@@ -146,12 +151,13 @@ function iterate_dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_di
     sample_time_energies = zeros(trajectory_iterations,length(sampling_times))
     sample_time_IPRs = zeros(trajectory_iterations,length(sampling_times))
     total_hops = Vector{Integer}(zeros(trajectory_iterations))
+    reached_boundary_count = 0
 
     #Looping over the same landscape a total of trajectory_iterations amount of times.
     for i = 1:trajectory_iterations
 
         #Performing the dKMC procedure for a single trajectory on a single realisation of energetic disorder.
-        squared_displacements,energies,IPRs,times = dKMC_exciton_transport(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,accuracy,end_time,exciton_hopping_radius,exciton_hamiltonian_radius,K_tot,E_step,E_limit)
+        squared_displacements,energies,IPRs,times,reached_boundary = dKMC_exciton_transport(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,accuracy,end_time,exciton_hopping_radius,exciton_hamiltonian_radius,K_tot,E_step,E_limit)
 
         #Converting results from irregular time intervals times to those at regular time intervals sampling_times.
         close_times = Vector{Integer}(zeros(length(sampling_times)))
@@ -163,6 +169,11 @@ function iterate_dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_di
         sample_time_IPRs[i,:] = IPRs[close_times]
         total_hops[i] = length(times) - 1
 
+        #Keep count of the number of trajectories that finished early due to charge carrier reaching system boundary.
+        if reached_boundary === true
+            reached_boundary_count += 1
+        end
+
     end
 
     #Averaging over all of the trajectories.
@@ -171,7 +182,7 @@ function iterate_dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_di
     mean_IPRs = mean(sample_time_IPRs,dims=1)
     mean_total_hops = mean(total_hops)
 
-    return mean_squared_displacements, mean_energies, mean_IPRs, mean_total_hops
+    return mean_squared_displacements, mean_energies, mean_IPRs, mean_total_hops, reached_boundary_count
 
 end
 
@@ -210,6 +221,7 @@ discrete values of squared displacement, energy, IPR, and time at each hop.
 - `energies`: Energies (in meV) after each hop.
 - `IPRs`: IPRs after each hop.
 - `times`: Times (in s) after each hop.
+- `reached_boundary`: Boolean describing whether the charge carrier reached the system boundary and the trajectory terminated early.
 
 """
 function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energies::Vector{<:AbstractFloat},dipole_orientations::Matrix{<:AbstractFloat},transition_dipole_moment::Number,epsilon_r::Number,bath_reorganisation_energy::Number,kappa::AbstractFloat,site_spacing::Number,accuracy::AbstractFloat,end_time::Number,exciton_hopping_radius::AbstractFloat,exciton_hamiltonian_radius::AbstractFloat,K_tot::Matrix{ComplexF64},E_step::Number,E_limit::Number)
@@ -231,6 +243,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
 
     #Setting the initial conditions.
     t = 0.0
+    reached_boundary = false
 
     #Creating lists to track time, positions, squared displacement, energy, and IPR.
     times = [t]
@@ -245,7 +258,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
 
         #Check whether we are too close to the edges of the system.
         if iszero(current_location .- exciton_hamiltonian_radius .< 1) == false || iszero(current_location .+ exciton_hamiltonian_radius .> N) == false 
-            @warn "Simulation terminated as the charge carrier got too close to the edge of the system. Increase the length of the system (N) to avoid this error."
+            reached_boundary = true
             break
         end
 
@@ -297,7 +310,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
 
     end
 
-    return squared_displacements, energies, IPRs, times
+    return squared_displacements, energies, IPRs, times, reached_boundary
 
 end
 

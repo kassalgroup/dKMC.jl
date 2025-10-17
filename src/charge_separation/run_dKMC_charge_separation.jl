@@ -111,6 +111,24 @@ if mean_separation_time != 0
     """)
 end
 
+if mean_outcomes[1,3] > 0.05
+    print(output,"""
+    ────────────────────────────────────────────────────────────────────────────────
+
+    WARNING: "A large proportion ($(mean_outcomes[1,3])) of trajectories exceeded the maximum hops cutoff. Consider increasing maximum_hops_cutoff and repeating the calculation."
+
+    """)
+end
+
+if mean_outcomes[1,4] > 0.01
+    print(output,"""
+    ────────────────────────────────────────────────────────────────────────────────
+
+    WARNING: "A large proportion ($(mean_outcomes[1,4])) of trajectories terminated early as a charge carrier got too close to the edge of the system. Consider increasing N and repeating the calculation."
+
+    """)
+end
+
 print(output,"""
 ────────────────────────────────────────────────────────────────────────────────
 

@@ -13,7 +13,7 @@ site_spacing: 1e-9
 
 # Simulation parameters
 landscape_iterations: 1000
-trajectory_iterations: 100
+trajectory_iterations: 10
 accuracy: 0.99
 end_time: 1e-10
 number_of_sampling_times: 100

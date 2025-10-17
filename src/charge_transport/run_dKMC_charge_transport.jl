@@ -62,7 +62,7 @@ end
 @everywhere include("dKMC_charge_transport_functions.jl")
 
 #Run the dKMC charge transport calculations.
-mobility,sampling_time_squared_displacements,sampling_time_energies,sampling_time_IPRs,total_hops = dKMC_charge_transport_functions.dKMC_charge_transport_results(inputs["dimension"],inputs["N"],inputs["disorder"],inputs["electronic_coupling"],inputs["bath_reorganisation_energy"],inputs["bath_cutoff_energy"],inputs["T"],inputs["site_spacing"],inputs["landscape_iterations"],inputs["trajectory_iterations"],inputs["accuracy"],inputs["end_time"],inputs["number_of_sampling_times"])
+mobility,sampling_time_squared_displacements,sampling_time_energies,sampling_time_IPRs,total_hops,reached_boundary_proportion = dKMC_charge_transport_functions.dKMC_charge_transport_results(inputs["dimension"],inputs["N"],inputs["disorder"],inputs["electronic_coupling"],inputs["bath_reorganisation_energy"],inputs["bath_cutoff_energy"],inputs["T"],inputs["site_spacing"],inputs["landscape_iterations"],inputs["trajectory_iterations"],inputs["accuracy"],inputs["end_time"],inputs["number_of_sampling_times"])
 
 #Record results and timer output to the output file.
 print(output,"""
@@ -84,7 +84,18 @@ Mean IPRs at sampling times: $(sampling_time_IPRs[1,:])
 Standard errors of the IPRs at sampling times: $(sampling_time_IPRs[2,:])
 
 Mean number of hops: $(total_hops[1]) ± $(total_hops[2])
+""")
 
+if reached_boundary_proportion > 0.01
+    print(output,"""
+    ────────────────────────────────────────────────────────────────────────────────
+
+    WARNING: "A large proportion ($(reached_boundary_proportion)) of trajectories terminated early as a charge carrier got too close to the edge of the system. Consider increasing N and repeating the calculation."
+
+    """)
+end
+
+print(output,"""
 ────────────────────────────────────────────────────────────────────────────────
 
 Evaluation completed successfully.
