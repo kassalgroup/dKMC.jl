@@ -176,11 +176,6 @@ function dKMC_charge_generation_results(dimension::Integer,N::Integer,disorders:
         mean_bulk_separated_final_state_characteristics = [mean(bulk_separated_final_state_characteristics); std(bulk_separated_final_state_characteristics)./sqrt(length(bulk_separated_final_state_characteristics))]
     end
 
-    #Print warning message if too many trajectories exceeded the maximum hops cutoff.
-    if mean_outcomes[1,6] > 0.05
-        @warn "A large proportion (>5%) of trajectories exceeded the maximum hops cutoff. Consider increasing the cutoff and repeating the calculation."
-    end
-
     return 	mean_outcomes, mean_initial_state_characteristics, mean_separation_time, mean_separated_initial_state_characteristics, mean_separated_final_state_characteristics, mean_interfacial_separation_time, mean_interfacial_separated_initial_state_characteristics, mean_interfacial_separated_final_state_characteristics, mean_bulk_separation_time, mean_bulk_separated_initial_state_characteristics, mean_bulk_separated_final_state_characteristics
 
 end
@@ -466,7 +461,6 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         
         #Checking if either charge is too close to the edge of the landscape to create a new subset of the Hamiltonian.
         if iszero(current_electron_location .- hamiltonian_radii[1,1] .< 1) == false || iszero(current_electron_location .+ hamiltonian_radii[1,2] .> N) == false || iszero(current_hole_location .- hamiltonian_radii[2,1] .< 1) == false || iszero(current_hole_location .+ hamiltonian_radii[2,2] .> N) == false
-            @warn "Simulation terminated as a charge carrier got too close to the edge of the system. Increase the length of the system (N) to avoid this error."
             outcome = "reached the edge of the system"
             break
         end
@@ -474,7 +468,6 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         #If currently in an exciton state, checking if the exciton is too close to the edge of the landscape to create a new subset of the Hamiltonian.
         if exciton == true  
             if iszero(current_exciton_location .- hamiltonian_radii[3,1] .< 1) == false || iszero(current_exciton_location .+ hamiltonian_radii[3,2] .> N) == false
-                @warn "Simulation terminated as a charge carrier got too close to the edge of the system. Increase the length of the system (N) to avoid this error."
                 outcome = "reached the edge of the system"
                 break
             end 
