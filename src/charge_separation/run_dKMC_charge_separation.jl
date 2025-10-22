@@ -1,3 +1,10 @@
+#Print a message to indicate the calculation is running.
+println("Welcome to dKMC, the calculation is now running.")
+
+#Activate the dKMC package.
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "..", ".."), io=devnull)
+
 #Loading the required packages.
 include("../shared_functions/package_loading.jl")
 
@@ -22,6 +29,9 @@ disorders = [inputs["acceptor_electron_disorder"], inputs["donor_hole_disorder"]
 electronic_couplings = [inputs["acceptor_electron_coupling"], inputs["donor_hole_coupling"]]
 bath_reorganisation_energies = [inputs["electron_bath_reorganisation_energy"], inputs["hole_bath_reorganisation_energy"]]
 bath_cutoff_energies = [inputs["electron_bath_cutoff_energy"], inputs["hole_bath_cutoff_energy"]] 
+
+#Record the starting time.
+start_time = DateTime(now())
 
 #Record function introduction and input file to output file.
 output = open(output_file, "w");
@@ -53,7 +63,7 @@ Advances 2022, 8, eabl9692.
 ────────────────────────────────────────────────────────────────────────────────
 
 Julia version:  $VERSION
-Start time:     $(DateTime(now()))
+Start time:     $start_time
 
 ────────────────────────────────────────────────────────────────────────────────
 User input:
@@ -78,7 +88,7 @@ print(output,"""
 ────────────────────────────────────────────────────────────────────────────────
 Results:
 ────────────────────────────────────────────────────────────────────────────────
-All uncertanties included below are standard errors of the mean.
+All uncertainties included below are standard errors of the mean.
 
 Internal quantum efficiency: $(mean_outcomes[1,1]) ± $(mean_outcomes[2,1])
 
@@ -129,12 +139,19 @@ if mean_outcomes[1,4] > 0.01
     """)
 end
 
+#Record the end time and run time and print to output.
+end_time = DateTime(now())
+run_time = canonicalize(end_time - start_time)
 print(output,"""
 ────────────────────────────────────────────────────────────────────────────────
 
 Evaluation completed successfully.
-End time:       $(DateTime(now()))
+End time:   $end_time
+Run time:   $run_time 
 
 ────────────────────────────────────────────────────────────────────────────────
 """)
 close(output)
+
+#Print a message to indicate the calculation is finished.
+println("The dKMC calculation is finished.")

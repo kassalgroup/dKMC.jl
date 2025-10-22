@@ -24,13 +24,13 @@ In summary:
 ## How to use:
 Before running any simulations:
 1. Install Julia from "https://julialang.org/downloads/".
-2. In Julia, install the dKMC package dependencies using: 
-```julia
-] add https://github.com/kassalgroup/dKMC.jl
-```
-3. In terminal, clone the dKMC repository into a folder of your choice using:
+2. In terminal, clone the dKMC repository into a folder of your choice using:
 ```
 git clone https://github.com/kassalgroup/dKMC.jl.git
+```
+3. In terminal, activate the dKMC package using:
+```
+julia --project=dKMC.jl -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 ```
 
 Running simulations:
