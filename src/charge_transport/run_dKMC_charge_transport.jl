@@ -1,3 +1,10 @@
+#Print a message to indicate the calculation is running.
+println("Welcome to dKMC, the calculation is now running.")
+
+#Activate the dKMC package.
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "..", ".."), io=devnull)
+
 #Loading the required packages.
 include("../shared_functions/package_loading.jl") 
 
@@ -16,6 +23,9 @@ raw_input = open(input_file) do file
     read(file, String)
 end
 inputs = YAML.load(raw_input)
+
+#Record the starting time.
+start_time = DateTime(now())
 
 #Record function introduction and input file to output file.
 output = open(output_file, "w");                                                                                                                    
@@ -44,7 +54,7 @@ and Exciton Transport in Disordered Materials. Chemical Science 2021, 12(6),
 ────────────────────────────────────────────────────────────────────────────────
 
 Julia version:  $VERSION
-Start time:     $(DateTime(now()))
+Start time:     $start_time
 
 ────────────────────────────────────────────────────────────────────────────────
 User input:
@@ -95,12 +105,19 @@ if reached_boundary_proportion > 0.01
     """)
 end
 
+#Record the end time and run time and print to output.
+end_time = DateTime(now())
+run_time = canonicalize(end_time - start_time)
 print(output,"""
 ────────────────────────────────────────────────────────────────────────────────
 
 Evaluation completed successfully.
-End time:       $(DateTime(now()))
+End time:   $end_time
+Run time:   $run_time 
 
 ────────────────────────────────────────────────────────────────────────────────
 """)
 close(output)
+
+#Print a message to indicate the calculation is finished.
+println("The dKMC calculation is finished.")
