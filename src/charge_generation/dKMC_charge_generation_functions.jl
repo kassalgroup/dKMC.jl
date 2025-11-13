@@ -8,7 +8,6 @@ include("../shared_functions/setup_hamiltonian.jl")
 include("../shared_functions/dKMC_hopping_rates.jl")
 include("../shared_functions/approximating_radii_functions.jl")
 
-
 """
     dKMC_charge_generation_results(dimension::Integer,N::Integer,disorders::Matrix{<:Number},
     exciton_disorders::Vector{<:Number},donor_HOMO_LUMO_gap::Number,LUMO_offset::Number,HOMO_offset::Number,
@@ -20,8 +19,8 @@ include("../shared_functions/approximating_radii_functions.jl")
     maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,
     maximum_excitation_distance::Number;
     phi_limits=round.(100 .* constants.hbar./bath_cutoff_energies),phi_steps=phi_limits./10000,
-    E_limits=round.(6 .* vcat(maximum(disorders,dims=2)[:],maximum(exciton_disorders)) .+ [LUMO_offset,HOMO_offset,HOMO_offset-LUMO_offset]),
-    E_steps = round.(6 .* vcat(minimum(disorders,dims=2)[:],minimum(exciton_disorders)))./10000)
+    E_limit=round(6*maximum(hcat(disorders,exciton_disorders))+maximum([LUMO_offset,HOMO_offset,HOMO_offset-LUMO_offset])),
+    E_step=round(6*minimum(hcat(disorders,exciton_disorders)))/10000)
 
 Produces the results for dKMC simulations of charge generation. To do so, it collects (or calculates) kappas 
 (renormalisation constant), K_tots (Fourier transform of bath correlation function), and Hamiltonian and hopping 
@@ -58,8 +57,8 @@ separation times and initial and final state characteristics.
 # Optional arguments:
 - `phi_steps`: Vector of the time steps used in calculating phi for electrons, holes, and excitons.
 - `phi_limits`: Vector of the time limits used in calculating phi for electrons, holes, and excitons.
-- `E_steps`: Vector of the energy steps used for values that K_tot is calculated at for electrons, holes, and excitons.
-- `E_limits`: Vector of the energy limits used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_step`: Energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_limit`: Energy limit used for values that K_tot is calculated at for electrons, holes, and excitons.
 
 # Output:
 - `mean_outcomes`: Vector of percentage of trajectories that end in each of the seven possible outcomes.
@@ -75,7 +74,7 @@ separation times and initial and final state characteristics.
 - `mean_bulk_separated_final_state_characteristics`: Vector of the mean energy (in meV), IPR, and electron-hole separation (in nm) of the final state for trajectories underdoing bulk separation.
 
 """
-function dKMC_charge_generation_results(dimension::Integer,N::Integer,disorders::Matrix{<:Number},exciton_disorders::Vector{<:Number},donor_HOMO_LUMO_gap::Number,LUMO_offset::Number,HOMO_offset::Number,exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},transition_dipole_moments::Vector{<:Number},epsilon_r::Number,site_spacing::Number,exciton_lifetimes::Vector{<:Number},CT_lifetimes::Vector{<:Number},bath_reorganisation_energies::Vector{<:Number},bath_cutoff_energies::Vector{<:Number},T::Number,landscape_iterations::Integer,trajectory_iterations::Integer,accuracy::AbstractFloat,maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number;phi_limits=round.(100 .* constants.hbar./bath_cutoff_energies),phi_steps=phi_limits./10000,E_limits=round.(6 .* vcat(maximum(disorders,dims=2)[:],maximum(exciton_disorders)) .+ [LUMO_offset,HOMO_offset,HOMO_offset-LUMO_offset]),E_steps=round.(6 .* vcat(minimum(disorders,dims=2)[:],minimum(exciton_disorders)))./10000)
+function dKMC_charge_generation_results(dimension::Integer,N::Integer,disorders::Matrix{<:Number},exciton_disorders::Vector{<:Number},donor_HOMO_LUMO_gap::Number,LUMO_offset::Number,HOMO_offset::Number,exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},transition_dipole_moments::Vector{<:Number},epsilon_r::Number,site_spacing::Number,exciton_lifetimes::Vector{<:Number},CT_lifetimes::Vector{<:Number},bath_reorganisation_energies::Vector{<:Number},bath_cutoff_energies::Vector{<:Number},T::Number,landscape_iterations::Integer,trajectory_iterations::Integer,accuracy::AbstractFloat,maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number;phi_limits=round.(100 .* constants.hbar./bath_cutoff_energies),phi_steps=phi_limits./10000,E_limit=round(6*maximum(hcat(disorders,exciton_disorders))+maximum([LUMO_offset,HOMO_offset,HOMO_offset-LUMO_offset])),E_step=round(6*minimum(hcat(disorders,exciton_disorders)))/10000)
 
     #Create the spectral density function for each particle type, here a super-ohmic spectral density is used.
     electron_J(E) = (bath_reorganisation_energies[1]/2) * (E/bath_cutoff_energies[1])^3 * exp(-E/bath_cutoff_energies[1])
@@ -94,26 +93,26 @@ function dKMC_charge_generation_results(dimension::Integer,N::Integer,disorders:
     kappas = [electron_kappa, hole_kappa, exciton_kappa]
 
     #Reading the precomputed K values for each particle, or calculating them if not already computed. K values are stored in a vector and called upon by looking at E and lambda+3 as the indices.
-    electron_K_tot = sPTRE.collect_K_results(electron_J,E_steps[1],E_limits[1],phi_steps[1],phi_limits[1],bath_reorganisation_energies[1],bath_cutoff_energies[1],T)
-    hole_K_tot = sPTRE.collect_K_results(hole_J,E_steps[2],E_limits[2],phi_steps[2],phi_limits[2],bath_reorganisation_energies[2],bath_cutoff_energies[2],T)
-    exciton_K_tot = sPTRE.collect_K_results(hole_J,E_steps[3],E_limits[3],phi_steps[3],phi_limits[3],bath_reorganisation_energies[3],bath_cutoff_energies[3],T)
-    electron_and_hole_K_tot = sPTRE.collect_K_results(electron_and_hole_J,min(E_steps[1],E_steps[2]),max(E_limits[1],E_limits[2]),min(phi_steps[1],phi_steps[2]),max(phi_limits[1],phi_limits[2]),[bath_reorganisation_energies[1] bath_reorganisation_energies[2]] ,[bath_cutoff_energies[1] bath_cutoff_energies[2]],T)
-    electron_and_exciton_K_tot = sPTRE.collect_K_results(electron_and_exciton_J,min(E_steps[1],E_steps[3]),max(E_limits[1],E_limits[3]),min(phi_steps[1],phi_steps[3]),max(phi_limits[1],phi_limits[3]),[bath_reorganisation_energies[1] bath_reorganisation_energies[3]] ,[bath_cutoff_energies[1] bath_cutoff_energies[3]],T)
-    hole_and_exciton_K_tot = sPTRE.collect_K_results(hole_and_exciton_J,min(E_steps[2],E_steps[3]),max(E_limits[2],E_limits[3]),min(phi_steps[2],phi_steps[3]),max(phi_limits[2],phi_limits[3]),[bath_reorganisation_energies[2] bath_reorganisation_energies[3]] ,[bath_cutoff_energies[2] bath_cutoff_energies[3]],T)
+    electron_K_tot = sPTRE.collect_K_results(electron_J,E_step,E_limit,phi_steps[1],phi_limits[1],bath_reorganisation_energies[1],bath_cutoff_energies[1],T)
+    hole_K_tot = sPTRE.collect_K_results(hole_J,E_step,E_limit,phi_steps[2],phi_limits[2],bath_reorganisation_energies[2],bath_cutoff_energies[2],T)
+    exciton_K_tot = sPTRE.collect_K_results(hole_J,E_step,E_limit,phi_steps[3],phi_limits[3],bath_reorganisation_energies[3],bath_cutoff_energies[3],T)
+    electron_and_hole_K_tot = sPTRE.collect_K_results(electron_and_hole_J,E_step,E_limit,min(phi_steps[1],phi_steps[2]),max(phi_limits[1],phi_limits[2]),[bath_reorganisation_energies[1] bath_reorganisation_energies[2]] ,[bath_cutoff_energies[1] bath_cutoff_energies[2]],T)
+    electron_and_exciton_K_tot = sPTRE.collect_K_results(electron_and_exciton_J,E_step,E_limit,min(phi_steps[1],phi_steps[3]),max(phi_limits[1],phi_limits[3]),[bath_reorganisation_energies[1] bath_reorganisation_energies[3]] ,[bath_cutoff_energies[1] bath_cutoff_energies[3]],T)
+    hole_and_exciton_K_tot = sPTRE.collect_K_results(hole_and_exciton_J,E_step,E_limit,min(phi_steps[2],phi_steps[3]),max(phi_limits[2],phi_limits[3]),[bath_reorganisation_energies[2] bath_reorganisation_energies[3]] ,[bath_cutoff_energies[2] bath_cutoff_energies[3]],T)
     K_tots = [electron_K_tot, hole_K_tot, exciton_K_tot, electron_and_hole_K_tot, electron_and_exciton_K_tot, hole_and_exciton_K_tot]
 
     #Calculating the approximating hamiltonian and hopping radii for each particle and each material, or reading them from a saved file if previously calculated.
-    donor_electron_hamiltonian_radius,donor_electron_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[1,1],electronic_couplings[1,1],bath_reorganisation_energies[1],bath_cutoff_energies[1],T,kappas[1],accuracy,landscape_iterations,K_tots[1],E_steps[1],E_limits[1])
-    acceptor_electron_hamiltonian_radius,acceptor_electron_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[1,2],electronic_couplings[1,2],bath_reorganisation_energies[1],bath_cutoff_energies[1],T,kappas[1],accuracy,landscape_iterations,K_tots[1],E_steps[1],E_limits[1])
-    donor_hole_hamiltonian_radius,donor_hole_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[2,1],electronic_couplings[2,1],bath_reorganisation_energies[2],bath_cutoff_energies[2],T,kappas[2],accuracy,landscape_iterations,K_tots[2],E_steps[2],E_limits[2])
-    acceptor_hole_hamiltonian_radius,acceptor_hole_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[2,2],electronic_couplings[2,2],bath_reorganisation_energies[2],bath_cutoff_energies[2],T,kappas[2],accuracy,landscape_iterations,K_tots[2],E_steps[2],E_limits[2])
-    donor_exciton_hamiltonian_radius,donor_exciton_hopping_radius = approximating_radii_functions.collect_exciton_approximating_radii(dimension,N,exciton_disorders[1],transition_dipole_moments[1],epsilon_r,bath_reorganisation_energies[3],bath_cutoff_energies[3],T,kappas[3],site_spacing,accuracy,landscape_iterations,K_tots[3],E_steps[3],E_limits[3])
-    acceptor_exciton_hamiltonian_radius,acceptor_exciton_hopping_radius = approximating_radii_functions.collect_exciton_approximating_radii(dimension,N,exciton_disorders[2],transition_dipole_moments[2],epsilon_r,bath_reorganisation_energies[3],bath_cutoff_energies[3],T,kappas[3],site_spacing,accuracy,landscape_iterations,K_tots[3],E_steps[3],E_limits[3])
+    donor_electron_hamiltonian_radius,donor_electron_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[1,1],electronic_couplings[1,1],bath_reorganisation_energies[1],bath_cutoff_energies[1],T,kappas[1],accuracy,landscape_iterations,K_tots[1],E_step,E_limit)
+    acceptor_electron_hamiltonian_radius,acceptor_electron_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[1,2],electronic_couplings[1,2],bath_reorganisation_energies[1],bath_cutoff_energies[1],T,kappas[1],accuracy,landscape_iterations,K_tots[1],E_step,E_limit)
+    donor_hole_hamiltonian_radius,donor_hole_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[2,1],electronic_couplings[2,1],bath_reorganisation_energies[2],bath_cutoff_energies[2],T,kappas[2],accuracy,landscape_iterations,K_tots[2],E_step,E_limit)
+    acceptor_hole_hamiltonian_radius,acceptor_hole_hopping_radius = approximating_radii_functions.collect_charge_approximating_radii(dimension,N,disorders[2,2],electronic_couplings[2,2],bath_reorganisation_energies[2],bath_cutoff_energies[2],T,kappas[2],accuracy,landscape_iterations,K_tots[2],E_step,E_limit)
+    donor_exciton_hamiltonian_radius,donor_exciton_hopping_radius = approximating_radii_functions.collect_exciton_approximating_radii(dimension,N,exciton_disorders[1],transition_dipole_moments[1],epsilon_r,bath_reorganisation_energies[3],bath_cutoff_energies[3],T,kappas[3],site_spacing,accuracy,landscape_iterations,K_tots[3],E_step,E_limit)
+    acceptor_exciton_hamiltonian_radius,acceptor_exciton_hopping_radius = approximating_radii_functions.collect_exciton_approximating_radii(dimension,N,exciton_disorders[2],transition_dipole_moments[2],epsilon_r,bath_reorganisation_energies[3],bath_cutoff_energies[3],T,kappas[3],site_spacing,accuracy,landscape_iterations,K_tots[3],E_step,E_limit)
     hamiltonian_radii = [donor_electron_hamiltonian_radius acceptor_electron_hamiltonian_radius; donor_hole_hamiltonian_radius acceptor_hole_hamiltonian_radius; donor_exciton_hamiltonian_radius acceptor_exciton_hamiltonian_radius]
     hopping_radii = [donor_electron_hopping_radius acceptor_electron_hopping_radius; donor_hole_hopping_radius acceptor_hole_hopping_radius; donor_exciton_hopping_radius acceptor_exciton_hopping_radius]
 
     #We parallelise this function over many processes, to repeat it for many (landscape_iterations) realisations of energetic disorder.
-    results = pmap((realisations_of_disorder)->iterate_dKMC_charge_generation(realisations_of_disorder,N,disorders,exciton_disorders,donor_HOMO_LUMO_gap,LUMO_offset,HOMO_offset,exciton_binding_energies,electronic_couplings,kappas,transition_dipole_moments,epsilon_r,site_spacing,exciton_lifetimes,CT_lifetimes,bath_reorganisation_energies,trajectory_iterations,accuracy,maximum_hops_cutoff,separation_cutoff,exciton_population_cutoff,maximum_excitation_distance,hopping_radii,hamiltonian_radii,K_tots,E_steps,E_limits), Int.(dimension.*ones(landscape_iterations)))
+    results = pmap((realisations_of_disorder)->iterate_dKMC_charge_generation(realisations_of_disorder,N,disorders,exciton_disorders,donor_HOMO_LUMO_gap,LUMO_offset,HOMO_offset,exciton_binding_energies,electronic_couplings,kappas,transition_dipole_moments,epsilon_r,site_spacing,exciton_lifetimes,CT_lifetimes,bath_reorganisation_energies,trajectory_iterations,accuracy,maximum_hops_cutoff,separation_cutoff,exciton_population_cutoff,maximum_excitation_distance,hopping_radii,hamiltonian_radii,K_tots,E_step,E_limit), Int.(dimension.*ones(landscape_iterations)))
 
     #Average the results over all landscape iterations.
     outcomes = []
@@ -190,8 +189,8 @@ end
     bath_reorganisation_energies::Vector{<:Number},trajectory_iterations::Integer,accuracy::AbstractFloat,
     maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,
     maximum_excitation_distance::Number,hopping_radii::Matrix{<:AbstractFloat},
-    hamiltonian_radii::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:Number},
-    E_limits::Vector{<:Number})
+    hamiltonian_radii::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_step::Number,
+    E_limit::Number)
 
 Repeats dKMC_charge_generation() for many trajectories on a single realisation of energetic disorder, before averaging 
 outcomes, initial state characteristics (energy, IPR and separation), separation time, and characteristics of initial 
@@ -223,8 +222,8 @@ and final states of trajectories that successfully separated.
 - `hopping_radii`: Matrix of precalculated distances that electrons, holes, and excitons can hop in the donor (row 1) and acceptor (row 2). 
 - `hamiltonian_radii`: Matrix of precalculated distance for electron, hole, and exciton sites in the donor (row 1) and acceptor (row 2) that are included as site-pairs in Hamiltonian subset.
 - `K_tots`: Vector of precaclulated K_tot values for electrons, holes, and excitons required for dKMC rate calculations.
-- `E_steps`: Vector of the energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
-- `E_limits`: Vector of the energy limits used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_step`: Energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_limit`: Energy limit used for values that K_tot is calculated at for electrons, holes, and excitons.
 
 # Output:
 - `mean_outcomes`: Vector of percentage of trajectories that end in each of the seven possible outcomes.
@@ -240,7 +239,7 @@ and final states of trajectories that successfully separated.
 - `mean_bulk_separated_final_state_characteristics`: Vector of the mean energy (in meV), IPR, and electron-hole separation (in nm) of the final state for trajectories underdoing bulk separation.
 
 """
-function iterate_dKMC_charge_generation(dimension::Integer,N::Integer,disorders::Matrix{<:Number},exciton_disorders::Vector{<:Number},donor_HOMO_LUMO_gap::Number,LUMO_offset::Number,HOMO_offset::Number,exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},kappas::Vector{<:AbstractFloat},transition_dipole_moments::Vector{<:Number},epsilon_r::Number,site_spacing::Number,exciton_lifetimes::Vector{<:Number},CT_lifetimes::Vector{<:Number},bath_reorganisation_energies::Vector{<:Number},trajectory_iterations::Integer,accuracy::AbstractFloat,maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number,hopping_radii::Matrix{<:AbstractFloat},hamiltonian_radii::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:Number},E_limits::Vector{<:Number})
+function iterate_dKMC_charge_generation(dimension::Integer,N::Integer,disorders::Matrix{<:Number},exciton_disorders::Vector{<:Number},donor_HOMO_LUMO_gap::Number,LUMO_offset::Number,HOMO_offset::Number,exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},kappas::Vector{<:AbstractFloat},transition_dipole_moments::Vector{<:Number},epsilon_r::Number,site_spacing::Number,exciton_lifetimes::Vector{<:Number},CT_lifetimes::Vector{<:Number},bath_reorganisation_energies::Vector{<:Number},trajectory_iterations::Integer,accuracy::AbstractFloat,maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number,hopping_radii::Matrix{<:AbstractFloat},hamiltonian_radii::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_step::Number,E_limit::Number)
 
     #Assigning HOMO and LUMO energies to every site.
     LUMO_HOMO_energies = setup_hamiltonian.LUMO_HOMO_energies(dimension,N,disorders,exciton_disorders,donor_HOMO_LUMO_gap,HOMO_offset,LUMO_offset)
@@ -267,7 +266,7 @@ function iterate_dKMC_charge_generation(dimension::Integer,N::Integer,disorders:
     for iterations = 1:trajectory_iterations
 
         #Performing the dKMC procedure for a single trajectory on a single realisation of energetic disorder.
-        outcome, t, initial_state_characteristics, final_state_characteristics = dKMC_charge_generation(dimension,N,LUMO_HOMO_energies,exciton_binding_energies,electronic_couplings,kappas,transition_dipole_moments,dipole_orientations,epsilon_r,site_spacing,exciton_lifetimes,CT_lifetimes,bath_reorganisation_energies,accuracy,maximum_hops_cutoff,separation_cutoff,exciton_population_cutoff,maximum_excitation_distance,hopping_radii,hamiltonian_radii,K_tots,E_steps,E_limits)
+        outcome, t, initial_state_characteristics, final_state_characteristics = dKMC_charge_generation(dimension,N,LUMO_HOMO_energies,exciton_binding_energies,electronic_couplings,kappas,transition_dipole_moments,dipole_orientations,epsilon_r,site_spacing,exciton_lifetimes,CT_lifetimes,bath_reorganisation_energies,accuracy,maximum_hops_cutoff,separation_cutoff,exciton_population_cutoff,maximum_excitation_distance,hopping_radii,hamiltonian_radii,K_tots,E_step,E_limit)
 
         #Storing outcomes and trajectory information.
         if outcome == "interfacial separation"
@@ -354,7 +353,7 @@ end
     bath_reorganisation_energies::Vector{<:Number},accuracy::AbstractFloat,maximum_hops_cutoff::Integer,
     separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number,
     hopping_radii::Matrix{<:Number},hamiltonian_radii::Matrix{<:Number},K_tots::Vector{Matrix{ComplexF64}},
-    E_steps::Vector{<:Number},E_limits::Vector{<:Number})
+    E_step::Number,E_limit::Number)
 
 Propagates the dKMC procedure for a single charge generation trajectory. It starts with an exciton state in the donor 
 material at a distance from the interface with the acceptor material of between 1 and maximum_excitation_distance 
@@ -383,8 +382,8 @@ outcome of the trajectory, the time, and the intial and final state charactersti
 - `hopping_radii`: Matrix of precalculated distances that electrons, holes, and excitons can hop in the donor (row 1) and acceptor (row 2). 
 - `hamiltonian_radii`: Matrix of precalculated distance for electron, hole, and exciton sites in the donor (row 1) and acceptor (row 2) that are included as site-pairs in Hamiltonian subset.
 - `K_tots`: Vector of precaclulated K_tot values for electrons, holes, and excitons required for dKMC rate calculations.
-- `E_steps`: Vector of the energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
-- `E_limits`: Vector of the energy limits used for values that K_tot is calculated at for electrons, holes, and excitons.        
+- `E_step`: Energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_limit`: Energy limit used for values that K_tot is calculated at for electrons, holes, and excitons.
 
 # Output:
 - `outcome`: String describing the trajectories outcome. 
@@ -393,7 +392,7 @@ outcome of the trajectory, the time, and the intial and final state charactersti
 - `final_state_characteristics`: Vector containing the energy (in meV), IPR, and separation (in nm) of the final state.
 
 """
-function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies::Matrix{<:AbstractFloat},exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},kappas::Vector{<:AbstractFloat},transition_dipole_moments::Vector{<:Number},dipole_orientations::Matrix{<:AbstractFloat},epsilon_r::Number,site_spacing::Number,exciton_lifetimes::Vector{<:Number},CT_lifetimes::Vector{<:Number},bath_reorganisation_energies::Vector{<:Number},accuracy::AbstractFloat,maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number,hopping_radii::Matrix{<:Number},hamiltonian_radii::Matrix{<:Number},K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:Number},E_limits::Vector{<:Number})
+function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies::Matrix{<:AbstractFloat},exciton_binding_energies::Vector{<:Number},electronic_couplings::Matrix{<:Number},kappas::Vector{<:AbstractFloat},transition_dipole_moments::Vector{<:Number},dipole_orientations::Matrix{<:AbstractFloat},epsilon_r::Number,site_spacing::Number,exciton_lifetimes::Vector{<:Number},CT_lifetimes::Vector{<:Number},bath_reorganisation_energies::Vector{<:Number},accuracy::AbstractFloat,maximum_hops_cutoff::Integer,separation_cutoff::Number,exciton_population_cutoff::AbstractFloat,maximum_excitation_distance::Number,hopping_radii::Matrix{<:Number},hamiltonian_radii::Matrix{<:Number},K_tots::Vector{Matrix{ComplexF64}},E_step::Number,E_limit::Number)
 
     #Randomly selecting how far an exciton is excited from the interface, between 1 and maximum_excitation_distance sites.
     excitation_distance = Int(ceil(maximum_excitation_distance*rand()/site_spacing))
@@ -482,8 +481,8 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         evals,evecs = eigen(Ht)
         excitons = findall(x->x>exciton_population_cutoff,sum(evecs[exciton_sites,:].^2,dims=1)[:])
         electron_centres = setup_hamiltonian.compute_centres(dimension,evecs,electron_r)
-        hole_centres = setup_hamiltonian.compute_centres(dimension,evecs,hole_r)    
-        current_state = argmax(((previous_eigenstate[findall(in(site_pair_indexes),previous_site_pair_indexes)]' * evecs[findall(in(previous_site_pair_indexes),site_pair_indexes),:])[:]).^2)
+        hole_centres = setup_hamiltonian.compute_centres(dimension,evecs,hole_r)
+        current_state = argmax(abs2.((previous_eigenstate[findall(in(site_pair_indexes),previous_site_pair_indexes)]' * evecs[filter(!iszero,something.(indexin(previous_site_pair_indexes,site_pair_indexes),0)),:])[:]))
         current_electron_location = electron_centres[current_state,:]
         current_hole_location = hole_centres[current_state,:]
 
@@ -517,10 +516,10 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
 
         #Calculating hopping rates to all states in accessible_states.
         hopping_rates = zeros(length(accessible_states))
-        current_state_relevant_sites = sortperm(abs.(evecs[:,current_state]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,current_state])./sum(abs.(evecs[:,current_state])),rev=true)))]
-        for f = eachindex(accessible_states)
-            destination_state_relevant_sites = sortperm(abs.(evecs[:,accessible_states[f]]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,accessible_states[f]])./sum(abs.(evecs[:,accessible_states[f]])),rev=true)))]
-            hopping_rate = dKMC_hopping_rates.charge_generation_dKMC_rate(current_state,accessible_states[f],transformed_coupling,evals,evecs,K_tots,E_steps,E_limits,current_state_relevant_sites,destination_state_relevant_sites,electron_index,hole_index,exciton_index,bath_index)
+        current_state_relevant_sites = dKMC_hopping_rates.relevant_sites(evecs[:,current_state],accuracy)
+        for (f,destination_state) in enumerate(accessible_states)
+            destination_state_relevant_sites = dKMC_hopping_rates.relevant_sites(evecs[:,destination_state],accuracy)
+            hopping_rate = dKMC_hopping_rates.charge_generation_dKMC_rate(current_state,destination_state,transformed_coupling,evals,evecs,K_tots,E_step,E_limit,current_state_relevant_sites,destination_state_relevant_sites,electron_index,hole_index,exciton_index,bath_index)
             if hopping_rate > 0
                 hopping_rates[f] = hopping_rate
             end 
@@ -576,6 +575,8 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
         #Recording the characteristics of the new state.
         if current_state in excitons
             exciton = true
+            exciton_centres =  setup_hamiltonian.compute_centres(dimension,evecs[exciton_sites,:]./sqrt.(sum(evecs[exciton_sites,:].^2, dims=1)),electron_r[exciton_sites,:])
+            current_exciton_location = exciton_centres[current_state,:]
         else
             exciton = false
         end	
@@ -587,9 +588,9 @@ function dKMC_charge_generation(dimension::Integer,N::Integer,LUMO_HOMO_energies
 
         #Checking if charges are separated by greater than separation_cutoff, if so we break.
         if current_separation > separation_cutoff
-            if current_electron_location[1] < N/2 && current_hole_location[1] < N/2
+            if current_electron_location[1] < N/2 + 0.5 && current_hole_location[1] < N/2 + 0.5
                 outcome = "bulk separation"
-            elseif current_electron_location[1] > N/2 + 1 && current_hole_location[1] > N/2 + 1
+            elseif current_electron_location[1] > N/2 + 0.5 && current_hole_location[1] > N/2 + 0.5
                 outcome = "bulk separation"
             else
                 outcome = "interfacial separation"
