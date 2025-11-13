@@ -77,11 +77,11 @@ but only uses a subset of sites that are relevant to each state.
 function charge_transport_dKMC_rate(initial_state::Integer,final_state::Integer,transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},K_tot::Matrix{ComplexF64},E_step::AbstractFloat,E_limit::Integer,initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer})
 
     #Start the damping rate at zero.
-    gamma = 0
+    gamma = 0.0
 
     #Check whether energy lies outside the range of precalculated K values.
     E = evals[initial_state] - evals[final_state]
-    if abs(E) < E_limit
+    if abs(E) < E_limit - E_step
 
         #Find the K value (at each of the 5 lambda values) at an energy that is closest to the precomputed values stored in K_tot.
         K = real.(K_tot[Int(round((E+E_limit)/E_step))+1,:])
@@ -102,7 +102,7 @@ function charge_transport_dKMC_rate(initial_state::Integer,final_state::Integer,
         end
     end
 
-    rate = (2/(constants.hbar^2))*real(gamma)
+    rate = (2/(constants.hbar^2))*gamma
 
     return rate
 
@@ -137,11 +137,11 @@ but only uses a subset of sites that are relevant to each state.
 function exciton_transport_dKMC_rate(initial_state::Integer,final_state::Integer,transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},K_tot::Matrix{ComplexF64},E_step::AbstractFloat,E_limit::Integer,initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer})
 
     #Start the damping rate at zero.
-    gamma = 0
+    gamma = 0.0
 
     #Check whether energy lies outside the range of precalculated K values.
     E = evals[initial_state] - evals[final_state]
-    if abs(E) < E_limit
+    if abs(E) < E_limit - E_step
         
         #Find the K value (at each of the 5 lambda values) at an energy that is closest to the precomputed values stored in K_tot.
         K=real.(K_tot[Int(round((E+E_limit)/E_step))+1,:])
@@ -159,7 +159,7 @@ function exciton_transport_dKMC_rate(initial_state::Integer,final_state::Integer
 
     end 
 
-    rate = (2/(constants.hbar^2))*real(gamma)
+    rate = (2/(constants.hbar^2))*gamma
 
     return rate
 
@@ -169,7 +169,7 @@ end
 """
     charge_separation_dKMC_rate(initial_state::Integer,final_state::Integer,
     transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},
-    K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:AbstractFloat},E_limits::Vector{<:Integer},
+    K_tots::Vector{Matrix{ComplexF64}},E_step::Number,E_limit::Number,
     initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer},
     electron_index::Vector{<:Integer},hole_index::Vector{<:Integer},bath_index::Matrix{Integer})
 
@@ -183,8 +183,8 @@ but only uses a subset of sites that are relevant to each state.
 - `evals`: Energy eigenvalues of the polaron trasformed system hamiltonian.
 - `evecs`: Energy eigenvectors of the polaron trasformed system hamiltonian.
 - `K_tots`: Vector of precaclulated K_tot values for electrons and holes.
-- `E_steps`: Vector of the energy step used for values that K_tot is calculated at for electrons and holes.
-- `E_limits`: Vector of the energy limits used for values that K_tot is calculated at for electrons and holes.
+- `E_step`: Energy step used for values that K_tot is calculated at for electrons and holes.
+- `E_limit`: Energy limit used for values that K_tot is calculated at for electrons and holes.
 - `initial_state_relevant_sites`: Sites relevant to the initial state, those that contain signicant contributions to the states amplitudes.
 - `final_state_relevant_sites`: Sites relevant to the final state, those that contain signicant contributions to the states amplitudes.
 - `electron_index`: Vector of indices to only the electron position of every site-pair.
@@ -195,18 +195,19 @@ but only uses a subset of sites that are relevant to each state.
 - `rate`: dKMC rate for delocalised hopping.
 
 """
-function charge_separation_dKMC_rate(initial_state::Integer,final_state::Integer,transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:AbstractFloat},E_limits::Vector{<:Integer},initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer},electron_index::Vector{<:Integer},hole_index::Vector{<:Integer},bath_index::Matrix{<:Integer})
+function charge_separation_dKMC_rate(initial_state::Integer,final_state::Integer,transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_step::Number,E_limit::Number,initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer},electron_index::Vector{<:Integer},hole_index::Vector{<:Integer},bath_index::Matrix{<:Integer})
     
     #Start the damping rate at zero.
-    gamma = 0
+    gamma = 0.0
     
     #Check whether energy lies outside the range of precalculated K values.
     E = evals[initial_state] - evals[final_state]
-    if abs(E) < E_limits[1] && abs(E) < E_limits[2]
+    if abs(E) < E_limit - E_step
 
         #Find the K values (at each of the 5 lambda values) for electrons and holes at an energy that is closest to the precomputed values stored in K_tots.
-        electron_K = real.(K_tots[1][Int(round((E+E_limits[1])/E_steps[1]))+1,:])
-        hole_K = real.(K_tots[2][Int(round((E+E_limits[2])/E_steps[2]))+1,:])
+        nearest_energy_step = Int(round((E+E_limit)/E_step))+1
+        electron_K = real.(K_tots[1][nearest_energy_step,:])
+        hole_K = real.(K_tots[2][nearest_energy_step,:])
 
         #Find pairs of sites which have non zero couplings between them. 
         pairs_1 = [CartesianIndex(i,j) for i in initial_state_relevant_sites, j in final_state_relevant_sites if transformed_coupling[i,j]!=0]
@@ -239,7 +240,7 @@ function charge_separation_dKMC_rate(initial_state::Integer,final_state::Integer
         end
     end 
 
-    rate = (2/(constants.hbar^2))*real(gamma)
+    rate = (2/(constants.hbar^2))*gamma
     
     return rate
 
@@ -249,7 +250,7 @@ end
 """
     charge_generation_dKMC_rate(initial_state::Integer,final_state::Integer,
     transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},
-    K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:AbstractFloat},E_limits::Vector{<:Integer},
+    K_tots::Vector{Matrix{ComplexF64}},E_step::Number,E_limit::Number,
     initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer},
     electron_index::Vector{<:Integer},hole_index::Vector{<:Integer},exciton_index::Vector{<:Integer},
     bath_index::Matrix{Integer})
@@ -264,8 +265,8 @@ but only uses a subset of sites that are relevant to each state.
 - `evals`: Energy eigenvalues of the polaron trasformed system hamiltonian.
 - `evecs`: Energy eigenvectors of the polaron trasformed system hamiltonian.
 - `K_tots`: Vector of precaclulated K_tot values for electrons, holes, and excitons.
-- `E_steps`: Vector of the energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
-- `E_limits`: Vector of the energy limits used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_step`: Energy step used for values that K_tot is calculated at for electrons, holes, and excitons.
+- `E_limit`: Energy limit used for values that K_tot is calculated at for electrons, holes, and excitons.
 - `initial_state_relevant_sites`: Sites relevant to the initial state, those that contain signicant contributions to the states amplitudes.
 - `final_state_relevant_sites`: Sites relevant to the final state, those that contain signicant contributions to the states amplitudes.
 - `electron_index`: Vector of indices to only the electron position of every site-pair.
@@ -277,22 +278,23 @@ but only uses a subset of sites that are relevant to each state.
 - `rate`: dKMC rate for delocalised hopping.
 
 """
-function charge_generation_dKMC_rate(initial_state::Integer,final_state::Integer,transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_steps::Vector{<:AbstractFloat},E_limits::Vector{<:Integer},initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer},electron_index::Vector{<:Integer},hole_index::Vector{<:Integer},exciton_index::Vector{<:Integer},bath_index::Matrix{<:Integer})
+function charge_generation_dKMC_rate(initial_state::Integer,final_state::Integer,transformed_coupling::Matrix{<:AbstractFloat},evals::Vector{<:AbstractFloat},evecs::Matrix{<:AbstractFloat},K_tots::Vector{Matrix{ComplexF64}},E_step::Number,E_limit::Number,initial_state_relevant_sites::Vector{<:Integer},final_state_relevant_sites::Vector{<:Integer},electron_index::Vector{<:Integer},hole_index::Vector{<:Integer},exciton_index::Vector{<:Integer},bath_index)
 
     #Start the damping rate at zero.
-    gamma = 0
+    gamma = 0.0
 
     #Check whether energy lies outside the range of precalculated K values.
     E = evals[initial_state] - evals[final_state]
-    if abs(E) < E_limits[1] && abs(E) < E_limits[2] && abs(E) < E_limits[3]
+    if abs(E) < E_limit - E_step
 
         #Find the K values (at each of the 5 lambda values) for electrons, holes, and excitons at an energy that is closest to the precomputed values stored in K_tots.
-        electron_K = real.(K_tots[1][Int(round((E+E_limits[1])/E_steps[1]))+1,:])
-        hole_K = real.(K_tots[2][Int(round((E+E_limits[2])/E_steps[2]))+1,:])
-        exciton_K = real.(K_tots[3][Int(round((E+E_limits[3])/E_steps[3]))+1,:])
-        electron_and_hole_K = real.(K_tots[4][Int(round((E+max(E_limits[1],E_limits[2]))/min(E_steps[1],E_steps[2])))+1,:])
-        electron_and_exciton_K = real.(K_tots[5][Int(round((E+max(E_limits[1],E_limits[3]))/min(E_steps[1],E_steps[3])))+1,:])
-        hole_and_exciton_K = real.(K_tots[6][Int(round((E+max(E_limits[2],E_limits[3]))/min(E_steps[2],E_steps[3])))+1,:])
+        nearest_energy_step = Int(round((E+E_limit)/E_step))+1
+        electron_K = real.(K_tots[1][nearest_energy_step,:])
+        hole_K = real.(K_tots[2][nearest_energy_step,:])
+        exciton_K = real.(K_tots[3][nearest_energy_step,:])
+        electron_and_hole_K = real.(K_tots[4][nearest_energy_step,:])
+        electron_and_exciton_K = real.(K_tots[5][nearest_energy_step,:])
+        hole_and_exciton_K = real.(K_tots[6][nearest_energy_step,:])
 
         #Find pairs of sites which have non zero couplings between them. 
         pairs_1 = [CartesianIndex(i,j) for i in initial_state_relevant_sites, j in final_state_relevant_sites if transformed_coupling[i,j]!=0]
@@ -413,9 +415,75 @@ function charge_generation_dKMC_rate(initial_state::Integer,final_state::Integer
 
     end 
 
-    rate = (2/(constants.hbar^2))*real(gamma)
+    rate = (2/(constants.hbar^2))*gamma
 
     return rate
+
+end
+
+
+"""
+    relevant_sites(eigenstate::AbstractVector{<:Real},accuracy::Real)
+
+Calculates the most relevant sites to the provided eigenstate, that is minimum number of sites required to contain 
+the sum of the magnitudes of the amplitudes to a specified accuracy.
+
+# Arguments:
+- `eigenstate`: Eigenstate of the polaron transformed hamiltonian.
+- `accuracy`: The accuracy of dKMC calculations (a_dKMC). 
+
+# Output:
+- `relevant_sites`: Vector of indexes to the sites most relevant to the provided eigenstate.
+
+"""
+function relevant_sites(eigenstate::AbstractVector{<:Real},accuracy::Real)
+
+    sorted_sites = sortperm(eigenstate; by=abs, rev=true)
+    sum_of_amplitudes = mapreduce(abs, +, eigenstate)
+    acc = zero(Float64)
+    k = 0
+    @inbounds for i in sorted_sites
+        acc += abs(eigenstate[i]) / sum_of_amplitudes
+        k += 1
+        if acc > accuracy
+            break
+        end
+    end
+
+    return sorted_sites[1:k]
+
+end
+
+
+"""
+    relevant_sites2(eigenstate::AbstractVector{<:Real},accuracy::Real)
+
+Calculates the most relevant sites to the provided eigenstate, that is minimum number of sites required to contain 
+the sum of populations to a specified accuracy.
+
+# Arguments:
+- `eigenstate`: Eigenstate of the polaron transformed hamiltonian.
+- `accuracy`: The accuracy of dKMC calculations (a_dKMC). 
+
+# Output:
+- `relevant_sites`: Vector of indexes to the sites most relevant to the provided eigenstate.
+
+"""
+function relevant_sites2(eigenstate::AbstractVector{<:Real}, accuracy::Real)
+
+    sorted_sites = sortperm(eigenstate; by=abs2, rev=true)
+    sum_of_amplitudes = mapreduce(abs2, +, eigenstate)
+    acc = zero(Float64)
+    k = 0
+    @inbounds for i in sorted_sites
+        acc += abs2(eigenstate[i]) / sum_of_amplitudes
+        k += 1
+        if acc > accuracy
+            break
+        end
+    end
+
+    return sorted_sites[1:k]
 
 end
 

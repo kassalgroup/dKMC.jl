@@ -268,7 +268,7 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
         H,Ht,r,transformed_coupling,site_indexes = setup_hamiltonian.current_exciton_transport_hamiltonian(dimension,N,exciton_site_energies,dipole_orientations,transition_dipole_moment,epsilon_r,bath_reorganisation_energy,kappa,site_spacing,exciton_hamiltonian_radius,current_location)
         evals,evecs = eigen(Ht)
         centres = setup_hamiltonian.compute_centres(dimension,evecs,r)
-        current_state = argmax(((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[findall(in(previous_site_indexes),site_indexes),:])[:]).^2)
+        current_state = argmax(abs2.((previous_eigenstate[findall(in(site_indexes),previous_site_indexes)]' * evecs[filter(!iszero,something.(indexin(previous_site_indexes,site_indexes),0)),:])[:]))
         current_location = centres[current_state,:]
 
         #Finding which states are accessible from the current state.
@@ -276,10 +276,10 @@ function dKMC_exciton_transport(dimension::Integer,N::Integer,exciton_site_energ
 
         #Calculating hopping rates to all states in accessible_states.
         hopping_rates = zeros(length(accessible_states))
-        current_state_relevant_sites = sortperm(abs.(evecs[:,current_state]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,current_state])./sum(abs.(evecs[:,current_state])),rev=true)))]
-        for f = eachindex(accessible_states)
-            destination_state_relevant_sites = sortperm(abs.(evecs[:,accessible_states[f]]),rev=true)[1:findfirst(x->x>accuracy,cumsum(sort(abs.(evecs[:,accessible_states[f]])./sum(abs.(evecs[:,accessible_states[f]])),rev=true)))]
-            hopping_rate = dKMC_hopping_rates.exciton_transport_dKMC_rate(current_state,accessible_states[f],transformed_coupling,evals,evecs,K_tot,E_step,E_limit,current_state_relevant_sites,destination_state_relevant_sites)
+        current_state_relevant_sites = dKMC_hopping_rates.relevant_sites(evecs[:,current_state],accuracy)
+        for (f,destination_state) in enumerate(accessible_states)
+            destination_state_relevant_sites = dKMC_hopping_rates.relevant_sites(evecs[:,destination_state],accuracy)
+            hopping_rate = dKMC_hopping_rates.exciton_transport_dKMC_rate(current_state,destination_state,transformed_coupling,evals,evecs,K_tot,E_step,E_limit,current_state_relevant_sites,destination_state_relevant_sites)
             if hopping_rate > 0
                 hopping_rates[f] = hopping_rate
             end

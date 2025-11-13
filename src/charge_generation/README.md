@@ -4,6 +4,8 @@ This dKMC module simulates the complete process of the generation of partially d
 For details, see:
 [Balzer, D.; Kassal, I. Delocalisation enables efficient charge generation in organic photovoltaics, even with little to no energetic offset. *Chemical Science* **2024**, *15*, 4779.](https://pubs.rsc.org/en/content/articlelanding/2024/sc/d3sc05409h)
 
+The algorithm is the same as is published above, except that following rediagonalisation the new state is chosen as the state with the biggest overlap with the previous state rather than as the state closest in position.
+
 ## Input File:
 The input parameters are to be supplied in YAML format; for an example, see `charge_transport_input.in`.
 

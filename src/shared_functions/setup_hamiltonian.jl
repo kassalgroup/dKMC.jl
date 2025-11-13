@@ -551,7 +551,7 @@ Determines whether the location of a site-pair lies within the hamilonian radii 
 function is_site_pair_within_radii(dimension::Integer,exciton::Bool,electron_site_location::Vector{<:Integer},hole_site_location::Vector{<:Integer},current_electron_location::Vector{<:AbstractFloat},current_hole_location::Vector{<:AbstractFloat},current_exciton_location::Vector{<:AbstractFloat},electron_hamiltonian_radius::Number,hole_hamiltonian_radius::Number,exciton_hamiltonian_radius::Number)
 
     if exciton == true
-        if sqrt(separation_squared(dimension,electron_site_location,current_electron_location))/electron_hamiltonian_radius + sqrt(separation_squared(dimension,hole_site_location,current_hole_location))/hole_hamiltonian_radius <= 1 || (separation_squared(dimension,electron_site_location,hole_site_location) == 0 && separation_squared(dimension,electron_site_location,current_electron_location)  <= exciton_hamiltonian_radius^2)
+        if sqrt(separation_squared(dimension,electron_site_location,current_electron_location))/electron_hamiltonian_radius + sqrt(separation_squared(dimension,hole_site_location,current_hole_location))/hole_hamiltonian_radius <= 1 || (separation_squared(dimension,electron_site_location,hole_site_location) == 0 && separation_squared(dimension,electron_site_location,current_exciton_location) <= exciton_hamiltonian_radius^2)
             outcome = true
         else
             outcome = false
@@ -657,16 +657,20 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
     #Finding which hamiltonian_radii to use for each particle.
     if current_electron_location[1] <= N/2
         electron_hamiltonian_radius = hamiltonian_radii[1,1]
-        exciton_hamiltonian_radius = hamiltonian_radii[3,1]
     else
         electron_hamiltonian_radius = hamiltonian_radii[1,2]
-        exciton_hamiltonian_radius = hamiltonian_radii[3,2]
     end
 
     if current_hole_location[1] <= N/2
         hole_hamiltonian_radius = hamiltonian_radii[2,1]
     else
         hole_hamiltonian_radius = hamiltonian_radii[2,2]
+    end
+
+    if current_exciton_location[1] <= N/2
+        exciton_hamiltonian_radius = hamiltonian_radii[3,1]
+    else
+        exciton_hamiltonian_radius = hamiltonian_radii[3,2]
     end
 
     #Find independent co-ordinates that are within hamiltonian radius of each charge.
@@ -738,11 +742,10 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
         H[i,i] = E
 
         #Calculate the energy of the site-pair following polaron transformation and assign to the diagonal element of Ht.
-        Ht[i,i] = E
         if separation == 0
-            Ht[i,i] = Ht[i,i] - bath_reorganisation_energies[3]
+            Ht[i,i] = E - bath_reorganisation_energies[3]
         else
-            Ht[i,i] = Ht[i,i] - bath_reorganisation_energies[1] - bath_reorganisation_energies[2]
+            Ht[i,i] = E - bath_reorganisation_energies[1] - bath_reorganisation_energies[2]
         end
 
         #Loop over all site-pairs again to assign electronic couplings between sites-pairs to off diagonal elements of the hamiltionian.
@@ -783,8 +786,8 @@ function current_charge_generation_hamiltonian(dimension::Integer,N::Integer,exc
                     else
                         transition_dipole_moment_2 = transition_dipole_moments[2]
                     end
-                    H[i,i_2] = H[i_2,i] =  dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i_2][1],:],electron_site_location,electron_site_location_2,site_spacing,epsilon_r)
-                    Ht[i,i_2] = Ht[i_2,i] =  kappas[3]*H[i,i_2]
+                    H[i,i_2] = H[i_2,i] = dipole_coupling(transition_dipole_moment_1,transition_dipole_moment_2,dipole_orientations[site_pair_indexes[i][1],:],dipole_orientations[site_pair_indexes[i_2][1],:],electron_site_location,electron_site_location_2,epsilon_r,site_spacing)
+                    Ht[i,i_2] = Ht[i_2,i] = kappas[3]*H[i,i_2]
                 end
             end
         end

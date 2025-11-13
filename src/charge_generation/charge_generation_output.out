@@ -23,7 +23,7 @@ organic photovoltaics, even with little to no energetic offset. Chemical Science
 ────────────────────────────────────────────────────────────────────────────────
 
 Julia version:  1.11.4
-Start time:     2025-10-23T14:29:28.771
+Start time:     2025-11-06T10:46:57.789
 
 ────────────────────────────────────────────────────────────────────────────────
 User input:
@@ -82,62 +82,62 @@ Results:
 ────────────────────────────────────────────────────────────────────────────────
 All uncertainties included below are standard errors of the mean.
 
-Internal quantum efficiency (IQE): 0.25139999999999946 ± 0.009114239922745581
+Internal quantum efficiency (IQE): 0.28140000000000004 ± 0.009543614649627288
 
 Proportion of all possible outcomes:
-    1. Separation: 0.25139999999999946 ± 0.009114239922745581
-        a. Interfacial separation: 0.24509999999999946 ± 0.009029813260944411
-        b. Bulk separation: 0.006299999999999997 ± 0.001237675984190457
-    2. Recombination: 0.7373999999999987 ± 0.01079198994843153
-        a. Exciton recombination: 0.49779999999999985 ± 0.008082108665470942
-        b. CT recombination: 0.23959999999999892 ± 0.007151682778658928
-            i. Interfacial CT recombination: 0.05030000000000008 ± 0.0019848046376027793
-            ii. Bulk CT recombination: 0.18929999999999883 ± 0.005964149652807276
-    3. Exceeded maximum hops cutoff: 0.010699999999999994 ± 0.0019848046376027793
-    4. Reached the edge of the system: 0.0005 ± 0.00022315868748448928
+    1. Separation: 0.28140000000000004 ± 0.009543614649627288
+        a. Interfacial separation: 0.2781 ± 0.00951740358348699
+        b. Bulk separation: 0.003300000000000001 ± 0.0007068306795899603
+    2. Recombination: 0.7116999999999991 ± 0.012658022576039915
+        a. Exciton recombination: 0.2987999999999999 ± 0.006616822677263035
+        b. CT recombination: 0.41289999999999916 ± 0.01079088472708303
+            i. Interfacial CT recombination: 0.20659999999999995 ± 0.0016359817958756296
+            ii. Bulk CT recombination: 0.20629999999999923 ± 0.006932414324632409
+    3. Exceeded maximum hops cutoff: 0.0068000000000000005 ± 0.0016359817958756296
+    4. Reached the edge of the system: 0.0001 ± 9.999999999999984e-5
 
 Mean characteristics of the initial state:
-    Energy (meV): 741.6821299961742 ± 0.5765042495528938
-    Inverse participation ratio: 2.1190944240196092 ± 0.017770215729161355
-    Electron-hole separation (nm): 0.1096945297551098 ± 0.0026126553148804726
+    Energy (meV): 741.5410519429676 ± 0.5960944217124308
+    Inverse participation ratio: 2.082585941070975 ± 0.01717602263316626
+    Electron-hole separation (nm): 0.112015667087781 ± 0.0027716460273378494
 
 For all trajectories where charges separate:
-    Mean separation time (s): 1.3551871433579098e-10 ± 4.64613557096228e-11
+    Mean separation time (s): 2.0497544663882814e-10 ± 6.031565882504515e-11
     Mean characteristics of the initial state:
-        Energy (meV): 742.6504261308894 ± 1.0214567932849663
-        Inverse participation ratio: 2.0979794032154837 ± 0.029496522427533933
-        Electron-hole separation (nm): 0.10703603187491244 ± 0.005430876230138164
+        Energy (meV): 742.8076948365651 ± 1.075776718809975
+        Inverse participation ratio: 2.1393915524319422 ± 0.027046039463024227
+        Electron-hole separation (nm): 0.12098011434469544 ± 0.005296801485009533
     Mean characteristics of the final state:
-        Energy (meV): 589.1967628616981 ± 4.905157809175883
-        Inverse participation ratio: 1.8884032128104313 ± 0.031827686591637004
-        Electron-hole separation (nm): 5.850991922085071 ± 0.02321771256394102
+        Energy (meV): 542.0238821850351 ± 5.654852225447764
+        Inverse participation ratio: 1.812121789779904 ± 0.029378600884862698
+        Electron-hole separation (nm): 5.854547639038506 ± 0.02350818523709001
 
 For trajectories undergoing interfacial separation:
-    Mean interfacial separation time (s): 1.3579093994644096e-10 ± 4.791136380091448e-11
+    Mean interfacial separation time (s): 2.0721526372147995e-10 ± 6.144530015078712e-11
     Mean characteristics of the initial state:
-        Energy (meV): 742.4207803501478 ± 1.0148679183234872
-        Inverse participation ratio: 2.106019969104023 ± 0.02998049227652587
-        Electron-hole separation (nm): 0.10880146218109861 ± 0.005645049362562418
+        Energy (meV): 742.8069292298201 ± 1.0796179779927928
+        Inverse participation ratio: 2.139978290576794 ± 0.0273138493026971
+        Electron-hole separation (nm): 0.12091080965040647 ± 0.005346997310960347
     Mean characteristics of the final state:
-        Energy (meV): 580.6867032294326 ± 4.824888383891179
-        Inverse participation ratio: 1.8907558799786537 ± 0.032628674895716525
-        Electron-hole separation (nm): 5.858659890037435 ± 0.024111009447544116
+        Energy (meV): 534.7240543083936 ± 5.428730311820321
+        Inverse participation ratio: 1.8168507801754559 ± 0.03017852051981646
+        Electron-hole separation (nm): 5.8605664880409725 ± 0.023798953168364282
 
 For trajectories undergoing bulk separation:
-    Mean bulk separation time (s): 8.682582455184758e-11 ± 4.808476697013348e-11
+    Mean bulk separation time (s): 5.123775873140394e-11 ± 2.3324413413623938e-11
     Mean characteristics of the initial state:
-        Energy (meV): 749.8671325404869 ± 5.8007163596468665
-        Inverse participation ratio: 1.8508199246582127 ± 0.11330651745525486
-        Electron-hole separation (nm): 0.08406049351233728 ± 0.021067106864717338
+        Energy (meV): 742.2559356419162 ± 8.4663820223465
+        Inverse participation ratio: 2.0760947690481037 ± 0.14756039158218343
+        Electron-hole separation (nm): 0.10712473947787117 ± 0.02514424008342691
     Mean characteristics of the final state:
-        Energy (meV): 777.6747636424222 ± 13.497015494389125
-        Inverse participation ratio: 1.8661750314710512 ± 0.13253782115718918
-        Electron-hole separation (nm): 5.692801361168379 ± 0.08831634183686107
+        Energy (meV): 837.4364786093423 ± 27.16445675397396
+        Inverse participation ratio: 1.656267749938676 ± 0.13127071475709948
+        Electron-hole separation (nm): 5.732266467090795 ± 0.10589879907352928
 
 ────────────────────────────────────────────────────────────────────────────────
 
 Evaluation completed successfully.
-End time:   2025-10-23T14:46:18.612
-Run time:   16 minutes, 49 seconds, 841 milliseconds 
+End time:   2025-11-06T11:08:19.057
+Run time:   21 minutes, 21 seconds, 268 milliseconds 
 
 ────────────────────────────────────────────────────────────────────────────────
