@@ -1,3 +1,5 @@
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.08722/status.svg)](https://doi.org/10.21105/joss.08722)
+
 # Delocalised Kinetic Monte Carlo (dKMC):
 dKMC is a package for simulating fundamental transport processes involving partially delocalised carriers in disordered materials, including charge and exciton transport as well as charge separation and generation. We developed dKMC for organic semiconductors, but it can be applied to other materials as well.
 
@@ -39,3 +41,7 @@ Running simulations:
 
 ## Typical module behaviour:
 Each module contains an example output file which demonstrates successful running of the module, shows the results produced by the module, and an example runtime for the simulations provided with the example input file. The example output files can therefore be used to check that the module is running normally.
+
+## Citation: 
+If dKMC is used in your research, please cite:
+- [Balzer, D.; Kassal, I. dKMC: Delocalised kinetic Monte Carlo for simulating fundamental transport processes involving partially delocalised carriers in disordered materials. *Journal of Open Source Software* **2025**, *10*(116), 8722.](https://joss.theoj.org/papers/10.21105/joss.08722)

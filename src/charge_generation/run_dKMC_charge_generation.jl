@@ -62,6 +62,9 @@ If this module is used, please cite the following:
 1. Balzer, D.; Kassal, I. Delocalisation enables efficient charge generation in 
 organic photovoltaics, even with little to no energetic offset. Chemical Science 
 2024, 15, 4779.
+2. Balzer, D.; Kassal, I. dKMC: Delocalised kinetic Monte Carlo for simulating 
+fundamental transport processes involving partially delocalised carriers in 
+disordered materials. Journal of Open Source Software 2025, 10(116), 8722.
 
 ────────────────────────────────────────────────────────────────────────────────
 

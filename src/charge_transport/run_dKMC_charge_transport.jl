@@ -50,6 +50,9 @@ If this module is used, please cite the following:
 Delocalised Kinetic Monte Carlo for Simulating Delocalisation-Enhanced Charge 
 and Exciton Transport in Disordered Materials. Chemical Science 2021, 12(6), 
 2276–2285. 
+2. Balzer, D.; Kassal, I. dKMC: Delocalised kinetic Monte Carlo for simulating 
+fundamental transport processes involving partially delocalised carriers in 
+disordered materials. Journal of Open Source Software 2025, 10(116), 8722.
 
 ────────────────────────────────────────────────────────────────────────────────
 

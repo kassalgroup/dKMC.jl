@@ -59,6 +59,9 @@ If this module is used, please cite the following:
 1. Balzer, D.; Kassal, I. Even a Little Delocalisation Produces Large Kinetic 
 Enhancements of Charge-Separation Efficiency in Organic Photovoltaics. Science 
 Advances 2022, 8, eabl9692.
+2. Balzer, D.; Kassal, I. dKMC: Delocalised kinetic Monte Carlo for simulating 
+fundamental transport processes involving partially delocalised carriers in 
+disordered materials. Journal of Open Source Software 2025, 10(116), 8722.
 
 ────────────────────────────────────────────────────────────────────────────────
 

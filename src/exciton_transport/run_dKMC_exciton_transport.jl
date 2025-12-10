@@ -48,6 +48,9 @@ If this module is used, please cite the following:
 1. Balzer, D.; Kassal, I. Mechanism of Delocalization-Enhanced Exciton Transport 
 in Disordered Organic Semiconductors. Journal of Physical Chemisry Letters 2023, 
 14(8), 2155-2162.
+2. Balzer, D.; Kassal, I. dKMC: Delocalised kinetic Monte Carlo for simulating 
+fundamental transport processes involving partially delocalised carriers in 
+disordered materials. Journal of Open Source Software 2025, 10(116), 8722.
 
 ────────────────────────────────────────────────────────────────────────────────
 
