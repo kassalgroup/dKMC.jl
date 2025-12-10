@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Daniel"
+  given-names: "Balzer"
+  orcid: "https://orcid.org/0000-0002-4640-1059"
+- family-names: "Ivan"
+  given-names: "Kassal"
+  orcid: "https://orcid.org/0000-0002-8376-0819"
+title: "dKMC"
+version: 1.1
+doi: 10.5281/zenodo.17844629
+date-released: 2025-12-7
+url: "https://github.com/kassalgroup/dKMC.jl"
